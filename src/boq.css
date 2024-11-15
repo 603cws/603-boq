@@ -7,6 +7,85 @@
 2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)
 */
 
+.card-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card-image .image {
+  width: 300px;
+  height: 150px;
+  margin-bottom: 20px;
+  object-fit: contain
+}
+
+.color-options {
+  display: inline-flex;
+  gap: 0px;
+}
+
+.color-thumbnail {
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.color-thumbnail:hover {
+  border-color: #333;
+}
+
+.image {
+  opacity: 0; /* Start transparent */
+  transition: opacity 1s; /* Adjust duration and timing as needed */
+}
+
+.image.loaded {
+  opacity: 1; /* Fade in to full opacity */
+}
+
+
+
+/* Hide the image by default */
+.hover-image {
+  display: none;
+  width: 150px;
+  height: 90px;
+  position: absolute;
+  left: 155px;
+  /* Start the image off-screen to the left */
+  top: -20px;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Animation to slide the image in from the left */
+.hover-card:hover .hover-image {
+  display: block;
+  animation: slideIn 0.5s forwards;
+}
+
+/* Darken the card on hover */
+.hover-card:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  /* Adjust color and opacity as needed */
+  transition: background-color 0.3s ease;
+}
+
+/* Keyframes for the slide-in effect */
+@keyframes slideIn {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 *,
 ::before,
 ::after {
@@ -549,9 +628,44 @@ video {
   width: 100%;
 }
 
-@media (min-width: 640px) {
+@media (max-width: 640px) {
   .container {
     max-width: 640px;
+  }
+
+  /* Trigger the animation on card hover */
+  .hover-card:hover .hover-image {
+    display: block;
+    animation: fadeInOut 4s forwards;
+    /* 4s duration: adjust as desired */
+  }
+
+  /* Keyframes for fade-in and fade-out effect */
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+      transform: translateX(-20px);
+      /* Slide in from the left */
+    }
+
+    25% {
+      opacity: 1;
+      transform: translateX(0);
+      /* Full visibility */
+    }
+
+    75% {
+      opacity: 1;
+      /* Keep visible */
+      transform: translateX(0);
+    }
+
+    100% {
+      opacity: 0;
+      /* Fade out */
+      transform: translateX(20px);
+      /* Optional slight movement to the right */
+    }
   }
 }
 

@@ -286,10 +286,37 @@ import './boq.css';
 import Cart from './Cart';
 import { LucideShoppingBag } from 'lucide-react';
 
-const Card = ({ title, price, image, details, addOns, initialMinimized = false, roomData, quantity, onAddToCart }) => {
+const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart }) => {
   const [selectedAddOns, setSelectedAddOns] = useState({});
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
-  const basePrice = price;
+  // const colorOptions = [
+  //   {src: null, label: 'black'},
+  //   { src: image, label: 'White' },
+  //   // { src: "https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/sign/addon/c31ace1e-a575-40ff-8cfa-bcbf98801e22-Expensive%20Chair?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhZGRvbi9jMzFhY2UxZS1hNTc1LTQwZmYtOGNmYS1iY2JmOTg4MDFlMjItRXhwZW5zaXZlIENoYWlyIiwiaWF0IjoxNzMxNTc4NTUzLCJleHAiOjE3MzE1ODIxNTN9.rTfG-gLLuET1iYwJ3QfZ03cL82GNwgji59IrdD3XJm0", label: 'Black' },
+  //   { src: image2, label: 'Wooden' },
+  //   { src: "https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/sign/addon/Chair-Good%20Chair?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhZGRvbi9DaGFpci1Hb29kIENoYWlyIiwiaWF0IjoxNzMxNTc4MTYxLCJleHAiOjE3MzE1ODE3NjF9.UGbv5YrpzDAv1xFXxT0zC1vB9CX3uXesKqPVgbo5ofc", label: 'Gray' }
+  // ];
+
+  const colorOptions = product_variants
+    .filter(variant => variant.image)  // Filter out variants with null or undefined images
+    .map(variant => ({
+      src: variant.image,
+      label: variant.title || 'Default',
+      title: variant.title,
+      details: variant.details,
+      price: variant.price
+    }));
+
+  const [selectedImage, setSelectedImage] = useState(colorOptions.find(option => option.src)?.src || null);
+  const [selectedTitle, setSelectedTitle] = useState(product_variants[0]?.title || null);
+  const [selectedDetails, setSelectedDetails] = useState(product_variants[0]?.details || null);
+  const [selectedPrice, setSelectedPrice] = useState(product_variants[0]?.price || 0);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const basePrice = selectedPrice;  //price
+
+  const handleImageLoad = () => {
+    setIsImageLoaded(true);
+  };
 
   const handleAddOnChange = (addOn, isChecked) => {
     setSelectedAddOns((prevSelectedAddOns) => ({
@@ -307,7 +334,7 @@ const Card = ({ title, price, image, details, addOns, initialMinimized = false, 
   if (isMinimized) {
     return (
       <div className="minimized-card" onClick={toggleMinimize}>
-        <span>{title}</span>
+        <span>{selectedTitle}</span>
         <div className="info">
           <p>Base Price: ₹{basePrice}</p>
           <p>Total Price: ₹{calculateTotalPrice}</p>
@@ -319,8 +346,8 @@ const Card = ({ title, price, image, details, addOns, initialMinimized = false, 
 
   const handleAddToCartClick = () => {
     const cartItem = {
-      title,
-      image,
+      title: selectedTitle,
+      image: selectedImage,
       price: calculateTotalPrice,
       addOns: Object.keys(selectedAddOns).filter((key) => selectedAddOns[key] > 0),
     };
@@ -328,15 +355,37 @@ const Card = ({ title, price, image, details, addOns, initialMinimized = false, 
     toggleMinimize();
   };
 
+  const handleImageClick = (imageSrc, title, details, price) => {
+    if (imageSrc !== selectedImage) {
+      setSelectedImage(imageSrc); // Only update the selected image if it's different
+      setSelectedTitle(title); // Update the selected title
+      setSelectedDetails(details);
+      setSelectedPrice(price);
+      setIsImageLoaded(false); // Reset image load state to trigger fade-in for the new image
+    }
+  };
+
   return (
     <div className="card-container">
       <CardSection className="card-image">
-        <img src={image} alt={title} className="image" />
+        <img src={selectedImage} alt={title} className={`image ${isImageLoaded ? 'loaded' : ''}`} onLoad={handleImageLoad} />
+
+        <div className="color-options">
+          {colorOptions.filter(option => option.src).map((option, index) => (
+            <img
+              key={index}
+              src={option.src}
+              alt={option.label}
+              className="color-thumbnail"
+              onClick={() => handleImageClick(option.src, option.title, option.details, option.price)}
+            />
+          ))}
+        </div>
       </CardSection>
 
       <CardSection className="card-features">
-        <h3>{title}</h3>
-        <p>{details}</p>
+        <h3>{selectedTitle}</h3>
+        <p>{selectedDetails}</p>
         {roomData && (
           <div className="room-info">
             <p>Room Data:</p>
@@ -358,13 +407,22 @@ const Card = ({ title, price, image, details, addOns, initialMinimized = false, 
         <h3>ADD ON</h3>
         <ul>
           {addOns.map((addOn, index) => (
-            <li key={index}>
-              <label>
-                <input
-                  type="checkbox"
-                  onChange={(e) => handleAddOnChange(addOn, e.target.checked)}
-                />
-                {addOn.name} (+₹{addOn.price})
+            <li key={index} className="hover-card" style={{ position: 'relative', padding: '10px', borderRadius: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center' }}>
+                <span className="hover-trigger">
+                  <input
+                    type="checkbox"
+                    onChange={(e) => handleAddOnChange(addOn, e.target.checked)}
+                  />
+                  {addOn.title} (+₹{addOn.price})
+                </span>
+                {addOn.image && (
+                  <img
+                    src={addOn.image}
+                    alt={addOn.title}
+                    className="hover-image"
+                  />
+                )}
               </label>
             </li>
           ))}
@@ -458,12 +516,18 @@ const App = () => {
         .from("products")
         .select(`
           *,
-          addons (*)
+          addons (*),
+          product_variants (*)
         `);
 
       if (error) throw error;
 
-      const allImages = data.flatMap(product => [product.image, ...product.addons.map(addon => addon.image)]);
+      // Flatten all images from products, addons, and product_variants
+      const allImages = data.flatMap(product => [
+        ...product.product_variants.map(variant => variant.image),
+        ...product.addons.map(addon => addon.image)
+      ]).filter(Boolean); // Remove null or undefined images
+
       const uniqueImages = [...new Set(allImages)];
 
       const { data: signedUrls, error: signedUrlError } = await supabase.storage
@@ -476,7 +540,10 @@ const App = () => {
 
       const processedData = data.map(product => ({
         ...product,
-        image: urlMap[product.image] || '',
+        product_variants: product.product_variants.map(variant => ({
+          ...variant,
+          image: urlMap[variant.image] || ''
+        })),
         addons: product.addons.map(addon => ({
           ...addon,
           image: urlMap[addon.image] || ''
@@ -611,6 +678,7 @@ const App = () => {
                         details={product.details}
                         addOns={product.addons}
                         image={product.image}
+                        product_variants={product.product_variants}
                         initialMinimized={product.initialMinimized}
                         onAddToCart={handleAddToCart}
                         // productsData={productsData || []}
