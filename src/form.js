@@ -1,21 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './form.css';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { supabase } from './supabase';
 
 const ProductForm = () => {
-  const categories = [
-    'Furniture', 
-    'Civil / Plumbing', 
-    'Lighting', 
-    'Electrical', 
-    'Partitions- door / windows / ceilings',
-    'Paint', 
-    'HVAC', 
-    'Smart Solutions', 
-    'Flooring', 
-    'Accessories'
-  ];
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [nestedSubcategories, setNestedSubcategories] = useState([]);
+  const [newSubcategory, setNewSubcategory] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase.from('categories').select('name, subcategories');
+      if (error) {
+        console.error(error);
+      } else {
+        // Parse subcategories from JSON string
+        const parsedData = data.map(category => ({
+          ...category,
+          subcategories: JSON.parse(category.subcategories)
+        }));
+        setCategories(parsedData);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const { register, handleSubmit, control, formState: { errors } } = useForm({
     defaultValues: {
@@ -24,6 +34,8 @@ const ProductForm = () => {
       price: '',
       image: null,
       category: '',
+      subcategory: '',
+      nestedSubcategory: '',
       addons: [{ image: null, title: '', price: '' }]
     }
   });
@@ -32,6 +44,40 @@ const ProductForm = () => {
     control,
     name: 'addons'
   });
+
+  const handleCategoryChange = (e) => {
+    const category = e.target.value;
+    setSelectedCategory(category);
+    const selectedCatObj = categories.find(cat => cat.name === category);
+    setSubcategories(selectedCatObj?.subcategories || []);
+    setNestedSubcategories([]);
+  };
+
+  const handleSubcategoryChange = (e) => {
+    const subcategory = e.target.value;
+    const selectedSubcatObj = subcategories.find(sub => sub.name === subcategory);
+    setNestedSubcategories(selectedSubcatObj?.subcategories || []);
+  };
+
+  const handleAddSubcategory = async () => {
+    if (!newSubcategory) return;
+
+    const category = categories.find(cat => cat.name === selectedCategory);
+    if (!category) return;
+
+    const updatedSubcategories = [...(category.subcategories || []), newSubcategory];
+    const { data, error } = await supabase
+      .from('categories')
+      .update({ subcategories: JSON.stringify(updatedSubcategories) })
+      .eq('name', selectedCategory);
+
+    if (error) {
+      console.error(error);
+    } else {
+      setSubcategories(updatedSubcategories);
+      setNewSubcategory('');
+    }
+  };
 
   const onSubmit = async (data) => {
     console.log(data);
@@ -46,7 +92,9 @@ const ProductForm = () => {
       details: data.details,
       price: data.price,
       image: ProductImage.path,
-      category: data.category,  // Added category field
+      category: data.category,
+      subcategory: data.subcategory || null,
+      nestedSubcategory: data.nestedSubcategory || null
     }).select().single();
 
     if (error) {
@@ -63,31 +111,87 @@ const ProductForm = () => {
         await supabase.from("products").delete().eq("id", Product.id);
         break;
       }
-      const { error: AddonError } = await supabase.from("addons").insert({ title: adf.title, price: adf.price, image: AddonFile.path, productid: Product.id });
+      const { error: AddonError } = await supabase.from("addons").insert({
+        title: adf.title,
+        price: adf.price,
+        image: AddonFile.path,
+        productid: Product.id
+      });
       if (AddonError) {
         console.error(AddonError);
         await supabase.from("products").delete().eq("id", Product.id);
         break;
       }
     }
+
+    // Refresh the page after submission
+    window.location.reload();
   };
 
   return (
     <form className="" onSubmit={handleSubmit(onSubmit)}>
       <div>
+        <label>Category:</label>
+        <select 
+          {...register('category', { required: 'Category is required' })}
+          onChange={handleCategoryChange}
+        >
+          <option value="">Select Category</option>
+          {categories.map((category, index) => (
+            <option key={index} value={category.name}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+        {errors.category && <p>{errors.category.message}</p>}
+      </div>
+
+      {subcategories.length > 0 && (
         <div>
-          <label>Category:</label>
-          <select {...register('category', { required: 'Category is required' })}>
-            <option value="">Select Category</option>
-            {categories.map((category, index) => (
-              <option key={index} value={category}>
-                {category}
+          <label>Subcategory:</label>
+          <select 
+            {...register('subcategory', { required: 'Subcategory is required' })}
+            onChange={handleSubcategoryChange}
+          >
+            <option value="">Select Subcategory</option>
+            {subcategories.map((subcategory, index) => (
+              <option key={index} value={subcategory}>
+                {subcategory}
               </option>
             ))}
           </select>
-          {errors.category && <p>{errors.category.message}</p>}
+          {errors.subcategory && <p>{errors.subcategory.message}</p>}
         </div>
+      )}
 
+      {nestedSubcategories.length > 0 && (
+        <div>
+          <label>Nested Subcategory:</label>
+          <select {...register('nestedSubcategory', { required: 'Nested Subcategory is required' })}>
+            <option value="">Select Nested Subcategory</option>
+            {nestedSubcategories.map((nestedSubcategory, index) => (
+              <option key={index} value={nestedSubcategory}>
+                {nestedSubcategory}
+              </option>
+            ))}
+          </select>
+          {errors.nestedSubcategory && <p>{errors.nestedSubcategory.message}</p>}
+        </div>
+      )}
+
+      <div>
+        <label>Add New Subcategory:</label>
+        <input
+          type="text"
+          value={newSubcategory}
+          onChange={(e) => setNewSubcategory(e.target.value)}
+        />
+        <button type="button" onClick={handleAddSubcategory}>
+          Add Subcategory
+        </button>
+      </div>
+
+      <div>
         <label>Title:</label>
         <input
           type="text"

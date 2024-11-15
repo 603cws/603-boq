@@ -588,64 +588,70 @@ video {
 /* General Styles */
 /* General Styles */
 /* General Styles */
+/* Base Styles */
 body {
-  font-family: 'Roboto', sans-serif;
-  background-color: #f2f4f7;
+  font-family: 'Inter', 'Helvetica Neue', sans-serif;
+  background-color: #f7f9fc;
   color: #333;
   margin: 0;
   padding: 20px;
   line-height: 1.6;
 }
 
-/* Card Container */
-.card-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: space-between;
-  margin-bottom: 20px;
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: #1a202c;
 }
 
-/* Individual Card Styles */
+/* Card Container */
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* Card Styles */
 .card {
   background-color: #ffffff;
-  border-radius: 15px;
-  padding: 25px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  flex: 1 1 calc(25% - 20px);
-  max-width: calc(25% - 20px);
-  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
   position: relative;
   min-height: 280px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 /* Image Card */
 .card-image img {
   width: 100%;
-  border-radius: 10px;
+  border-radius: 8px;
   object-fit: cover;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s ease;
 }
 
 .card-image img:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 /* Features, Add-ons, and Summary Card */
 .card-features, .card-add-ons, .card-summary {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .card-features h3, .card-summary h4 {
-  margin: 0;
-  color: #333333;
+  margin: 0 0 8px;
+  color: #2d3748;
   font-weight: 600;
 }
 
@@ -656,108 +662,107 @@ body {
 }
 
 .card-add-ons li {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .card-add-ons label {
   cursor: pointer;
-  font-size: 1em;
+  font-size: 0.95em;
   display: flex;
   align-items: center;
 }
 
 .card-add-ons input[type="checkbox"] {
   margin-right: 12px;
+  accent-color: #4a5568;
 }
 
+/* Category Section */
 .category-section {
-  margin-bottom: 30px;
+  margin-bottom: 40px;
 }
 
 .category-section h2 {
-  font-size: 24px;
-  margin-bottom: 15px;
-  color: #333;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #8463dc;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
 }
 
 .category-products {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
-
 
 /* Minimized Card */
 .minimized-card {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  padding: 15px;
-  background-color: #f0f0f0;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  gap: 12px;
+  padding: 16px;
+  background-color: #edf2f7;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  transition: background-color 0.3s, box-shadow 0.3s ease-in-out;
+  transition: all 0.3s ease;
   min-height: 160px;
 }
 
 .minimized-card:hover {
-  background-color: #e0e0e0;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  background-color: #e2e8f0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .minimized-card span {
-  font-size: 1.3em;
-  color: #2d2d2d;
+  font-size: 1.1em;
+  color: #2d3748;
   font-weight: 500;
 }
 
 .minimized-card .info {
-  font-size: 0.95em;
-  color: #666666;
+  font-size: 0.9em;
+  color: #4a5568;
 }
 
 /* Buttons */
-.done-button, .start-button {
-  background-color: #333333;
-  color: #ffffff;
-  padding: 12px 20px;
+.done-button, .start-button, .edit, .add-on {
+  padding: 10px 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  font-size: 1em;
+  transition: all 0.3s ease;
+  font-size: 0.95em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.done-button, .start-button {
+  background-color: #4a5568;
+  color: #ffffff;
   align-self: flex-start;
 }
 
 .done-button:hover, .start-button:hover {
-  background-color: #444444;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  background-color: #2d3748;
 }
-
-
-
-.addon-image {
-  width: 50px;
-  height: 50px;
-  margin-right: 10px;
-}
-
 
 .edit, .add-on {
-  background-color: #007bff;
+  background-color: #4299e1;
   color: #ffffff;
-  padding: 12px 18px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  font-size: 0.95em;
 }
 
 .edit:hover, .add-on:hover {
-  background-color: #0056b3;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  background-color: #3182ce;
+}
+
+.addon-image {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  border-radius: 4px;
 }
 
 /* Search Filter Section */
@@ -765,103 +770,291 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 20px;
-  padding: 10px;
+  margin: 24px 0;
+  padding: 16px;
   border-radius: 8px;
-  background-color: #f8f8f8;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #edf2f7;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Search Bar Styling */
 .search-bar {
   flex: 1;
-  padding: 10px;
+  padding: 12px 16px;
   font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
   margin-right: 20px;
   transition: all 0.3s ease;
 }
 
 .search-bar:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
 }
 
 /* Price Slider Styling */
 .price-slider {
-  flex: 2;
-  margin-left: 20px;
-  color: #007bff;
+  width: 100%; /* Full width of the container */
+  max-width: 400px; /* Maximum width for larger screens */
+  margin: 20px auto; /* Centers the slider and adds vertical space */
+  padding: 0 15px; /* Adds horizontal padding for mobile */
+  box-sizing: border-box; /* Includes padding in width calculation */
+}
+
+.price-slider .MuiSlider-root {
+  color: #4299e1; /* Main color theme */
 }
 
 .price-slider .MuiSlider-thumb {
-  height: 24px;
-  width: 24px;
-  background-color: #fff;
-  border: 2px solid currentColor;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.price-slider .MuiSlider-thumb:hover,
-.price-slider .MuiSlider-thumb.Mui-focusVisible,
-.price-slider .MuiSlider-thumb.Mui-active {
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+  height: 20px;
+  width: 20px;
+  background-color: #4299e1;
+  border: 2px solid #fff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+  margin-top: -9px; /* Adjusts vertical positioning */
+  margin-left: -10px;
 }
 
 .price-slider .MuiSlider-track {
-  height: 8px;
-  background-color: #007bff;
+  height: 4px;
+  background-color: #4299e1;
 }
 
 .price-slider .MuiSlider-rail {
-  height: 8px;
-  background-color: #ccc;
+  height: 4px;
+  background-color: #e2e8f0; /* Lighter shade for better contrast */
+}
+
+.price-slider .MuiSlider-thumb:hover,
+.price-slider .MuiSlider-thumb.Mui-focusVisible {
+  box-shadow: 0px 0px 8px rgba(66, 153, 225, 0.5);
+}
+
+.price-slider .MuiSlider-thumb.Mui-active {
+  box-shadow: 0px 0px 10px rgba(66, 153, 225, 0.8);
+}
+
+/* Media query for larger screens */
+@media (min-width: 768px) {
+  .price-slider {
+    padding: 0; /* Remove padding on larger screens */
+  }
+}
+/* boq.css */
+
+/* Overall container for the search and filter section */
+.search-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9; /* Light background for better visibility */
+}
+
+/* Search bar styles */
+.search-bar {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #007bff; /* Blue border */
+  border-radius: 5px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+/* Price slider styles */
+.price-slider {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Filter dropdown styles */
+.filter-dropdown {
+  position: relative;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.filter-button {
+  padding: 10px 15px;
+  background-color: #007bff; /* Blue background */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.filter-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Dropdown menu styles */
+.dropdown-menu {
+  position: absolute;
+  top: 100%; /* Position below the button */
+  left: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+  display: none; /* Hidden by default */
+}
+
+.filter-dropdown.active .dropdown-menu {
+  display: block; /* Show dropdown when active */
+}
+
+.menu-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #f0f0f0; /* Light gray background on hover */
+}
+
+/* Add this for mobile responsiveness */
+@media (max-width: 600px) {
+  .search-filter {
+    padding: 8px;
+  }
+  
+  .search-bar, .filter-button {
+    font-size: 14px;
+  }
+}
+
+.subcategory-heading {
+  font-size: 1.25rem; /* Slightly larger for better readability */
+  font-weight: 600; /* Semi-bold for emphasis */
+  margin-top: 20px; /* More space above */
+  margin-bottom: 12px; /* More space below */
+  color: #4a5568; /* Darker shade for better contrast */
+  border-bottom: 2px solid #e2e8f0; /* Consistent with main heading */
+  padding-bottom: 6px; /* More padding for better spacing */
+  margin-left: 9px;
 }
 
 /* Compare Button Styling */
 .compare-button {
-  margin-top: 10px;
-  padding: 8px 12px;
+  margin-top: 12px;
+  padding: 10px 16px;
   font-size: 14px;
   color: #fff;
-  background-color: #007bff;
+  background-color: #4299e1;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .compare-button:hover {
-  background-color: #0056b3;
+  background-color: #3182ce;
 }
 
 .compare-button:active {
-  background-color: #00408d;
+  background-color: #2c5282;
+}
+
+.room-data-box-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  gap: 10px;
+  justify-content: center;
+}
+
+.room-data-box {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 5px;
+  width: 140px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.room-data-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.room-data-key {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+  font-size: 0.9em;
+}
+
+.room-data-value {
+  color: #666;
+  font-size: 0.85em;
+}
+
+.room-data-box-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.room-data-box-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 100px;
+  background: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -50px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.room-data-box-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+.slick-btn{
+  background: #03040756;
+  border: none;
 }
 
 
 /* Responsive Design */
-@media (max-width: 1024px) {
-  .card-container {
-      justify-content: center;
-  }
-
-  .card {
-      max-width: calc(50% - 20px);
-  }
-}
-
 @media (max-width: 768px) {
   .card-container {
-      flex-direction: column;
-      align-items: center;
+    grid-template-columns: 1fr;
   }
-
-  .card {
-      max-width: 100%;
-      margin-bottom: 20px;
+  
+  .search-filter {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-bar, .price-slider {
+    margin: 10px 0;
+  }
+}
+@media(max-width:425px){
+  .room-data-box{
+    width: 120px;
+    font-size: 12px;
+    left: 0;
   }
 }
