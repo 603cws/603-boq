@@ -113,32 +113,32 @@
 //         .select()
 //         .order('created_at', { ascending: false })
 //         .limit(1);
-  
+
 //       if (error) throw error;
-  
+
 //       if (data && data.length > 0) {
 //         const latestRoomData = data[0];
 //         const roomsArray = {
-          // linear: latestRoomData.linear,
-          // ltype: latestRoomData.ltype,
-          // md: latestRoomData.md,
-          // manager: latestRoomData.manager,
-          // small: latestRoomData.small,
-          // ups: latestRoomData.ups,
-          // bms: latestRoomData.bms,
-          // server: latestRoomData.server,
-          // reception: latestRoomData.reception,
-          // lounge: latestRoomData.lounge,
-          // sales: latestRoomData.sales,
-          // phonebooth: latestRoomData.phonebooth,
-          // discussionroom: latestRoomData.discussionroom,
-          // interviewroom: latestRoomData.interviewroom,
-          // conferenceroom: latestRoomData.conferenceroom,
-          // boardroom: latestRoomData.boardroom,
-          // meetingroom: latestRoomData.meetingroom,
-          // meetingroomlarge: latestRoomData.meetingroomlarge,
-          // hrroom: latestRoomData.hrroom,
-          // financeroom: latestRoomData.financeroom,
+// linear: latestRoomData.linear,
+// ltype: latestRoomData.ltype,
+// md: latestRoomData.md,
+// manager: latestRoomData.manager,
+// small: latestRoomData.small,
+// ups: latestRoomData.ups,
+// bms: latestRoomData.bms,
+// server: latestRoomData.server,
+// reception: latestRoomData.reception,
+// lounge: latestRoomData.lounge,
+// sales: latestRoomData.sales,
+// phonebooth: latestRoomData.phonebooth,
+// discussionroom: latestRoomData.discussionroom,
+// interviewroom: latestRoomData.interviewroom,
+// conferenceroom: latestRoomData.conferenceroom,
+// boardroom: latestRoomData.boardroom,
+// meetingroom: latestRoomData.meetingroom,
+// meetingroomlarge: latestRoomData.meetingroomlarge,
+// hrroom: latestRoomData.hrroom,
+// financeroom: latestRoomData.financeroom,
 //         };
 //         setRoomNumbers([roomsArray]);
 //       }
@@ -240,10 +240,10 @@
 //         {loading ? (
 //           Array.from({ length: 4 }).map((_, index) => (
 //             <div key={index} className="card-skeleton-container">
-              // <Skeleton variant="rectangular" height={150} width="100%" className="skeleton-card-image" />
-              // <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
-              // <Skeleton variant="text" width="80%" height={20} style={{ margin: '5px 0' }} />
-              // <Skeleton variant="text" width="50%" height={20} style={{ margin: '5px 0' }} />
+// <Skeleton variant="rectangular" height={150} width="100%" className="skeleton-card-image" />
+// <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
+// <Skeleton variant="text" width="80%" height={20} style={{ margin: '5px 0' }} />
+// <Skeleton variant="text" width="50%" height={20} style={{ margin: '5px 0' }} />
 //             </div>
 //           ))
 //         ) : (
@@ -286,7 +286,7 @@ import './boq.css';
 import Cart from './Cart';
 import { LucideShoppingBag } from 'lucide-react';
 
-const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart }) => {
+const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat }) => {
   const [selectedAddOns, setSelectedAddOns] = useState({});
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   // const colorOptions = [
@@ -306,6 +306,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       details: variant.details,
       price: variant.price
     }));
+  console.log(colorOptions);
 
   const [selectedImage, setSelectedImage] = useState(colorOptions.find(option => option.src)?.src || null);
   const [selectedTitle, setSelectedTitle] = useState(product_variants[0]?.title || null);
@@ -326,8 +327,24 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
   };
 
   const calculateTotalPrice = useMemo(() => {
-    return Object.values(selectedAddOns).reduce((total, addOnPrice) => total + addOnPrice, basePrice);
-  }, [selectedAddOns, basePrice]);
+    const totalAddOnPrice = Object.values(selectedAddOns).reduce((total, addOnPrice) => total + addOnPrice, basePrice);
+
+    const normalizedSubCat = subCat.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    // Iterate over the data keys and check if any match normalizedSubCat
+    const matchedKey = Object.keys(data).find(key => normalizedSubCat.includes(key.toLowerCase()));
+    var quantity;
+    if (matchedKey) {
+      console.log(`Matched key: ${matchedKey}, Value: ${data[matchedKey]}`);
+      quantity = data[matchedKey];
+    }
+
+    // Calculation for 'linear' using basePrice and addOn
+    const linearTotal = (quantity * totalAddOnPrice);
+    // console.log('bp: '+basePrice+ 'quantity: '+ quantity + 'total: ' +totalAddOnPrice+ 'lTotal: ' + linearTotal);
+    console.log(subCat);
+    return linearTotal;
+  }, [selectedAddOns, basePrice, data]);
 
   const toggleMinimize = () => setIsMinimized((prev) => !prev);
 
@@ -368,7 +385,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
   return (
     <div className="card-container">
       <CardSection className="card-image">
-        <img src={selectedImage} alt={title} className={`image ${isImageLoaded ? 'loaded' : ''}`} onLoad={handleImageLoad} />
+        <img src={selectedImage} alt={selectedTitle} className={`image ${isImageLoaded ? 'loaded' : ''}`} onLoad={handleImageLoad} />
 
         <div className="color-options">
           {colorOptions.filter(option => option.src).map((option, index) => (
@@ -457,15 +474,15 @@ const App = () => {
   const [cartItems, setCartItems] = useState([]);
 
   const categories = [
-    'Furniture', 
-    'Civil / Plumbing', 
-    'Lighting', 
-    'Electrical', 
+    'Furniture',
+    'Civil / Plumbing',
+    'Lighting',
+    'Electrical',
     'Partitions- door / windows / ceilings',
-    'Paint', 
-    'HVAC', 
-    'Smart Solutions', 
-    'Flooring', 
+    'Paint',
+    'HVAC',
+    'Smart Solutions',
+    'Flooring',
     'Accessories'
   ];
 
@@ -476,9 +493,9 @@ const App = () => {
         .select()
         .order('created_at', { ascending: false })
         .limit(1);
-  
+
       if (error) throw error;
-  
+
       if (data && data.length > 0) {
         const latestRoomData = data[0];
         const roomsArray = {
@@ -580,13 +597,29 @@ const App = () => {
 
   const filteredProducts = useMemo(() => {
     return productsData.filter((product) => {
-      const matchesSearch = product.title.toLowerCase().includes(searchQuery) ||
-                            product.details.toLowerCase().includes(searchQuery);
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-      const matchesCategory = selectedCategory === '' || product.category === selectedCategory;
-      return matchesSearch && matchesPrice && matchesCategory;
+      // Ensure product_variants2 exists and has at least one element
+      if (!product.product_variants || product.product_variants.length === 0) {
+        return false;
+      }
+
+      // Check if any variant matches the criteria
+      const matchesVariant = product.product_variants.some((variant) => {
+        // Ensure title, details, and price exist in the variant
+        const matchesSearch =
+          variant.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          variant.details?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesPrice =
+          variant.price >= priceRange[0] && variant.price <= priceRange[1];
+        return matchesSearch && matchesPrice;
+      });
+
+      const matchesCategory =
+        selectedCategory === '' || product.category === selectedCategory;
+
+      return matchesVariant && matchesCategory;
     });
   }, [productsData, searchQuery, priceRange, selectedCategory]);
+
 
   const groupedProducts = useMemo(() => {
     const grouped = {};
@@ -602,14 +635,14 @@ const App = () => {
     return grouped;
   }, [filteredProducts]);
 
-  const toggleCart=()=>{
+  const toggleCart = () => {
     setOpen(true);
   }
 
   const handleAddToCart = (item) => {
     setCartItems((prev) => [...prev, item]);
   };
-  
+
 
   return (
     <div className="App">
@@ -673,17 +706,19 @@ const App = () => {
                   {products.map((product) => (
                     <div key={product.id}>
                       <Card
-                        title={product.title}
-                        price={product.price}
-                        details={product.details}
+                        // title={product.title}
+                        // price={product.price}
+                        // details={product.details}
                         addOns={product.addons}
-                        image={product.image}
+                        // image={product.image}
                         product_variants={product.product_variants}
                         initialMinimized={product.initialMinimized}
                         onAddToCart={handleAddToCart}
-                        // productsData={productsData || []}
-                        // roomData={roomNumbers[0]} // Adjust this if necessary
-                        // quantity={roomNumbers[0]?.[product.title.toLowerCase()] || 0} // Pass the quantity
+                        data={roomNumbers[0]}
+                        subCat={subcategory}
+                      // productsData={productsData || []}
+                      // roomData={roomNumbers[0]} // Adjust this if necessary
+                      // quantity={roomNumbers[0]?.[product.title.toLowerCase()] || 0} // Pass the quantity
                       />
                     </div>
                   ))}
@@ -697,7 +732,7 @@ const App = () => {
         open={open} setOpen={setOpen} cartItems={cartItems}
       />
       <button className='cart-icon fixed bottom-10 right-10 bg-black text-white rounded-xl ' onClick={toggleCart}><LucideShoppingBag size={40} /></button>
-      
+
     </div>
   );
 };
