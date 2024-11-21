@@ -285,6 +285,7 @@ import RoomDataBox from './RoomDataBox';
 import './boq.css';
 import Cart from './Cart';
 import { LucideShoppingBag } from 'lucide-react';
+import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
 const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat }) => {
   const [selectedAddOns, setSelectedAddOns] = useState({});
@@ -643,6 +644,11 @@ const App = () => {
     setCartItems((prev) => [...prev, item]);
   };
 
+  const [expandedSubcategory, setExpandedSubcategory] = useState(null);
+
+  const toggleSubcategory = (subcategory) => {
+    setExpandedSubcategory((prev) => (prev === subcategory ? null : subcategory));
+  };
 
   return (
     <div className="App">
@@ -702,26 +708,36 @@ const App = () => {
               <h2>{category}</h2>
               {Object.entries(subcategories).map(([subcategory, products]) => (
                 <div key={subcategory} className="subcategory-section">
-                  <h3 className="subcategory-heading">{subcategory}</h3>
-                  {products.map((product) => (
-                    <div key={product.id}>
-                      <Card
-                        // title={product.title}
-                        // price={product.price}
-                        // details={product.details}
-                        addOns={product.addons}
-                        // image={product.image}
-                        product_variants={product.product_variants}
-                        initialMinimized={product.initialMinimized}
-                        onAddToCart={handleAddToCart}
-                        data={roomNumbers[0]}
-                        subCat={subcategory}
-                      // productsData={productsData || []}
-                      // roomData={roomNumbers[0]} // Adjust this if necessary
-                      // quantity={roomNumbers[0]?.[product.title.toLowerCase()] || 0} // Pass the quantity
-                      />
+                  <h3
+                    className="subcategory-heading"
+                    onClick={() => toggleSubcategory(subcategory)}
+                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    {subcategory}
+                    <span style={{ marginLeft: '50px' }}>
+                      {expandedSubcategory === subcategory ? (
+                        <MdExpandLess size={20} />
+                      ) : (
+                        <MdExpandMore size={20} />
+                      )}
+                    </span>
+                  </h3>
+                  {expandedSubcategory === subcategory && (
+                    <div className="subcategory-content">
+                      {products.map((product) => (
+                        <div key={product.id}>
+                          <Card
+                            addOns={product.addons}
+                            product_variants={product.product_variants}
+                            initialMinimized={product.initialMinimized}
+                            onAddToCart={handleAddToCart}
+                            data={roomNumbers[0]}
+                            subCat={subcategory}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
               ))}
             </div>
