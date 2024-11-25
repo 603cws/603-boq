@@ -283,11 +283,11 @@ import { Slider, Skeleton, Select, MenuItem, Button } from '@mui/material';
 import { supabase } from './supabase';
 import RoomDataBox from './RoomDataBox';
 import './boq.css';
-import Cart from './Cart';
+// import Cart from './Cart';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 // import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
-const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat,onDone }) => {
+const Card = ({ title, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone, price, setPrice }) => {
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const [selectedAddOns, setSelectedAddOns] = useState({});
 
@@ -337,7 +337,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     return linearTotal;
   }, [selectedAddOns, basePrice, data]);
 
-  const toggleMinimize = () =>{
+  const toggleMinimize = () => {
     setIsMinimized((prev) => !prev);
   };
 
@@ -350,26 +350,38 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
   //   updateBOQTotal(calculateTotalPrice);
   // }, [calculateTotalPrice]);
 
+  const handleStartClick = (subCat) => {
+    const priceValue = Number(price[subCat]); // Ensure it's a number
+    const totalPrice = Number(calculateTotalPrice); // Ensure it's a number
+  
+    if (priceValue - totalPrice > -1) {
+      setPrice(subCat, -totalPrice);
+    } else {
+      setPrice(subCat, 0);
+    }
+    toggleMinimize();
+  };
+
   if (!isMinimized) {
     return (
-      <div className="minimized-card" onClick={toggleMinimize}>
+      <div className="minimized-card">
         <div className='flex justify-between'>
-        <div className="info">
-        <span>{selectedTitle}</span>
-          <p>Base Price: ₹{basePrice}</p>
-          <p>Total Price: ₹{calculateTotalPrice}</p>
-        </div>
-        {/* Attach the remove function to the Start button */}
-        <button
-          className="start-button"
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent triggering `toggleMinimize`
-            /*handleRemoveFromCart(selectedTitle);*/ // Call remove function
-            toggleMinimize();
-          }}
-        >
-          Start
-        </button>
+          <div className="info">
+            <span>{selectedTitle}</span>
+            <p>Base Price: ₹{basePrice}</p>
+            <p>Total Price: ₹{calculateTotalPrice}</p>
+          </div>
+          {/* Attach the remove function to the Start button */}
+          <button
+            className="start-button"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent triggering `toggleMinimize`
+              /*handleRemoveFromCart(selectedTitle);*/ // Call remove function
+              handleStartClick(subCat);
+            }}
+          >
+            Start
+          </button>
         </div>
       </div>
     );
@@ -394,8 +406,10 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       setIsImageLoaded(false); // Reset image load state to trigger fade-in for the new image
     }
   };
+
   const handleDoneClick = () => {
     onDone(calculateTotalPrice); // Pass the total price to the parent
+    setPrice(subCat, calculateTotalPrice);
     toggleMinimize();
   };
 
@@ -490,7 +504,7 @@ const App = () => {
   // const [open, setOpen] = useState(false);
   // const [cartItems, setCartItems] = useState([]);
   const [totalBOQCost, setTotalBOQCost] = useState(0);
- 
+
 
   const categories = [
     'Furniture',
@@ -614,10 +628,14 @@ const App = () => {
     setShowFilters(!showFilters);
   };
 
-  const updateBOQTotal = (newTotalPrice) => {
-    setTotalBOQCost(prev=>prev+newTotalPrice);
+  // const updateBOQTotal = (newTotalPrice) => {
+  //   setTotalBOQCost(prev => prev + newTotalPrice);
+  // };
+  const updateBOQTotal = () => {
+    const total = Object.values(price).reduce((acc, curr) => acc + curr, 0); // Sum of all prices
+    setTotalBOQCost(total);
   };
-  console.log("boq total: ",totalBOQCost)
+  console.log("boq total: ", totalBOQCost)
 
   const filteredProducts = useMemo(() => {
     return productsData.filter((product) => {
@@ -671,6 +689,23 @@ const App = () => {
 
   const toggleSubcategory = (subcategory) => {
     setExpandedSubcategory((prev) => (prev === subcategory ? null : subcategory));
+  };
+
+  const [price, setPrice] = useState({});
+
+  const handlePrice = (subCat, value) => {
+    setPrice((prevPrices) => {
+      const updatedPrices = {
+        ...prevPrices,
+        [subCat]: Math.max(0, (prevPrices[subCat] || 0) + value), // Ensure price doesn't go below 0
+      };
+  
+      // Update the BOQ Total
+      const total = Object.values(updatedPrices).reduce((acc, curr) => acc + curr, 0);
+      setTotalBOQCost(total);
+  
+      return updatedPrices; // Ensure the new state is returned
+    });
   };
 
   return (
@@ -738,7 +773,7 @@ const App = () => {
                   >
                     {subcategory}
                     <h6 className="text-xs" style={{ margin: '0 10px' }}>
-                      Total Cost of {subcategory}: ₹
+                      Total Cost of {subcategory}: ₹ {price[subcategory] || 0}
                     </h6>
                     <span style={{ marginLeft: '50px' }}>
                       {expandedSubcategory === subcategory ? (
@@ -762,7 +797,8 @@ const App = () => {
                             data={roomNumbers[0]}
                             subCat={subcategory}
                             onDone={updateBOQTotal}
-                           
+                            setPrice={handlePrice}
+                            price={price}
                           />
                         </div>
                       ))}
@@ -778,7 +814,7 @@ const App = () => {
         open={open} setOpen={setOpen} cartItems={cartItems}
       />       */}
       <div>
-      {/* <button className='cart-icon fixed bottom-10 right-10 bg-black text-white rounded-xl ' onClick={toggleCart}><ShoppingCart size={40} /></button> */}
+        {/* <button className='cart-icon fixed bottom-10 right-10 bg-black text-white rounded-xl ' onClick={toggleCart}><ShoppingCart size={40} /></button> */}
         <h4 className='fixed right-10 bottom-2 bg-gray-300 px-3 rounded'>Total Cost: ₹
           {totalBOQCost}
         </h4>
