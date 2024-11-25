@@ -28,7 +28,7 @@ const RoomDataBox = ({ roomData }) => {
   const roomEntries = Object.entries(roomData);
 
   const settings = {
-    infinite: true,
+    // infinite: true,
     speed: 800,
     slidesToShow: 7, // Show 7 slides at a time by default
     slidesToScroll: 2,

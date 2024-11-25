@@ -60,7 +60,7 @@ export default function Cart({open, setOpen, cartItems}) {
                 </div>
                 <div className='flex justify-between px-5 sticky'>
                     <h3>Grand Total: ₹{grandTotal}</h3>
-                    <button className='bg-green-500 text-white font-semibold px-5 py-1.5 rounded-xl mb-2 hover:bg-blue-500'>Get BOQ</button>
+                    <button className='bg-green-500 text-white font-semibold px-5 py-1.5 rounded-xl mb-2 hover:bg-blue-500'>Download BOQ</button>
                 </div>
               </div>
             </DialogPanel>

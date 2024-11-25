@@ -284,19 +284,12 @@ import { supabase } from './supabase';
 import RoomDataBox from './RoomDataBox';
 import './boq.css';
 import Cart from './Cart';
-import { LucideShoppingBag } from 'lucide-react';
-import { MdExpandMore, MdExpandLess } from 'react-icons/md';
+import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
+// import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
-const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat }) => {
-  const [selectedAddOns, setSelectedAddOns] = useState({});
+const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat,onDone }) => {
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
-  // const colorOptions = [
-  //   {src: null, label: 'black'},
-  //   { src: image, label: 'White' },
-  //   // { src: "https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/sign/addon/c31ace1e-a575-40ff-8cfa-bcbf98801e22-Expensive%20Chair?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhZGRvbi9jMzFhY2UxZS1hNTc1LTQwZmYtOGNmYS1iY2JmOTg4MDFlMjItRXhwZW5zaXZlIENoYWlyIiwiaWF0IjoxNzMxNTc4NTUzLCJleHAiOjE3MzE1ODIxNTN9.rTfG-gLLuET1iYwJ3QfZ03cL82GNwgji59IrdD3XJm0", label: 'Black' },
-  //   { src: image2, label: 'Wooden' },
-  //   { src: "https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/sign/addon/Chair-Good%20Chair?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJhZGRvbi9DaGFpci1Hb29kIENoYWlyIiwiaWF0IjoxNzMxNTc4MTYxLCJleHAiOjE3MzE1ODE3NjF9.UGbv5YrpzDAv1xFXxT0zC1vB9CX3uXesKqPVgbo5ofc", label: 'Gray' }
-  // ];
+  const [selectedAddOns, setSelectedAddOns] = useState({});
 
   const colorOptions = product_variants
     .filter(variant => variant.image)  // Filter out variants with null or undefined images
@@ -307,7 +300,6 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       details: variant.details,
       price: variant.price
     }));
-  console.log(colorOptions);
 
   const [selectedImage, setSelectedImage] = useState(colorOptions.find(option => option.src)?.src || null);
   const [selectedTitle, setSelectedTitle] = useState(product_variants[0]?.title || null);
@@ -336,42 +328,62 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     const matchedKey = Object.keys(data).find(key => normalizedSubCat.includes(key.toLowerCase()));
     var quantity;
     if (matchedKey) {
-      console.log(`Matched key: ${matchedKey}, Value: ${data[matchedKey]}`);
       quantity = data[matchedKey];
     }
 
     // Calculation for 'linear' using basePrice and addOn
     const linearTotal = (quantity * totalAddOnPrice);
     // console.log('bp: '+basePrice+ 'quantity: '+ quantity + 'total: ' +totalAddOnPrice+ 'lTotal: ' + linearTotal);
-    console.log(subCat);
     return linearTotal;
   }, [selectedAddOns, basePrice, data]);
 
-  const toggleMinimize = () => setIsMinimized((prev) => !prev);
+  const toggleMinimize = () =>{
+    setIsMinimized((prev) => !prev);
+  };
 
-  if (isMinimized) {
+  // const handleRemoveFromCart = (titleToRemove) => {
+  //   setCartItems((prev) => prev.filter((item) => item.title !== titleToRemove));
+  //   toggleMinimize();
+  // };
+
+  // useEffect(() => {
+  //   updateBOQTotal(calculateTotalPrice);
+  // }, [calculateTotalPrice]);
+
+  if (!isMinimized) {
     return (
       <div className="minimized-card" onClick={toggleMinimize}>
-        <span>{selectedTitle}</span>
+        <div className='flex justify-between'>
         <div className="info">
+        <span>{selectedTitle}</span>
           <p>Base Price: ₹{basePrice}</p>
           <p>Total Price: ₹{calculateTotalPrice}</p>
         </div>
-        <button className="start-button">Start</button>
+        {/* Attach the remove function to the Start button */}
+        <button
+          className="start-button"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent triggering `toggleMinimize`
+            /*handleRemoveFromCart(selectedTitle);*/ // Call remove function
+            toggleMinimize();
+          }}
+        >
+          Start
+        </button>
+        </div>
       </div>
     );
   }
-
-  const handleAddToCartClick = () => {
-    const cartItem = {
-      title: selectedTitle,
-      image: selectedImage,
-      price: calculateTotalPrice,
-      addOns: Object.keys(selectedAddOns).filter((key) => selectedAddOns[key] > 0),
-    };
-    onAddToCart(cartItem); // Add item to cart
-    toggleMinimize();
-  };
+  // const handleAddToCartClick = () => {
+  //   const cartItem = {
+  //     title: selectedTitle,
+  //     image: selectedImage,
+  //     price: calculateTotalPrice,
+  //     addOns: Object.keys(selectedAddOns).filter((key) => selectedAddOns[key] > 0),
+  //   };
+  //   onAddToCart(cartItem); // Add item to cart
+  //   toggleMinimize();
+  // };
 
   const handleImageClick = (imageSrc, title, details, price) => {
     if (imageSrc !== selectedImage) {
@@ -381,6 +393,10 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       setSelectedPrice(price);
       setIsImageLoaded(false); // Reset image load state to trigger fade-in for the new image
     }
+  };
+  const handleDoneClick = () => {
+    onDone(calculateTotalPrice); // Pass the total price to the parent
+    toggleMinimize();
   };
 
   return (
@@ -403,7 +419,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
 
       <CardSection className="card-features">
         <h3>{selectedTitle}</h3>
-        <p>{selectedDetails}</p>
+        <p className='text-sm'>{selectedDetails}</p>
         {roomData && (
           <div className="room-info">
             <p>Room Data:</p>
@@ -421,8 +437,8 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         )}
       </CardSection>
 
-      <CardSection className="card-add-ons">
-        <h3>ADD ON</h3>
+      <CardSection className="card-add-ons overflow-y-auto">
+        <h3 className='section-heading'>ADD ON</h3>
         <ul>
           {addOns.map((addOn, index) => (
             <li key={index} className="hover-card" style={{ position: 'relative', padding: '10px', borderRadius: '8px' }}>
@@ -452,7 +468,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         <p>Base Price: ₹{basePrice}</p>
         <p>Add-Ons: ₹{Object.values(selectedAddOns).reduce((total, price) => total + price, 0)}</p>
         <p>Total Price: ₹{calculateTotalPrice}</p>
-        <button className="done-button" onClick={handleAddToCartClick}>Done</button>
+        <button className="done-button" onClick={handleDoneClick}>Done</button>
       </CardSection>
     </div>
   );
@@ -471,8 +487,10 @@ const App = () => {
   const [roomNumbers, setRoomNumbers] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [open, setOpen] = useState(false);
-  const [cartItems, setCartItems] = useState([]);
+  // const [open, setOpen] = useState(false);
+  // const [cartItems, setCartItems] = useState([]);
+  const [totalBOQCost, setTotalBOQCost] = useState(0);
+ 
 
   const categories = [
     'Furniture',
@@ -596,6 +614,11 @@ const App = () => {
     setShowFilters(!showFilters);
   };
 
+  const updateBOQTotal = (newTotalPrice) => {
+    setTotalBOQCost(prev=>prev+newTotalPrice);
+  };
+  console.log("boq total: ",totalBOQCost)
+
   const filteredProducts = useMemo(() => {
     return productsData.filter((product) => {
       // Ensure product_variants2 exists and has at least one element
@@ -636,13 +659,13 @@ const App = () => {
     return grouped;
   }, [filteredProducts]);
 
-  const toggleCart = () => {
-    setOpen(true);
-  }
+  // const toggleCart = () => {
+  //   setOpen(true);
+  // }
 
-  const handleAddToCart = (item) => {
-    setCartItems((prev) => [...prev, item]);
-  };
+  // const handleAddToCart = (item) => {
+  //   setCartItems((prev) => [...prev, item]);
+  // };
 
   const [expandedSubcategory, setExpandedSubcategory] = useState(null);
 
@@ -714,13 +737,17 @@ const App = () => {
                     style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                   >
                     {subcategory}
+                    <h6 className="text-xs" style={{ margin: '0 10px' }}>
+                      Total Cost of {subcategory}: ₹
+                    </h6>
                     <span style={{ marginLeft: '50px' }}>
                       {expandedSubcategory === subcategory ? (
-                        <MdExpandLess size={20} />
+                        <ArrowUpNarrowWide size={20} />
                       ) : (
-                        <MdExpandMore size={20} />
+                        <ArrowDownNarrowWide size={20} />
                       )}
                     </span>
+
                   </h3>
                   {expandedSubcategory === subcategory && (
                     <div className="subcategory-content">
@@ -730,9 +757,12 @@ const App = () => {
                             addOns={product.addons}
                             product_variants={product.product_variants}
                             initialMinimized={product.initialMinimized}
-                            onAddToCart={handleAddToCart}
+                            // onAddToCart={handleAddToCart}
+                            // setCartItems={setCartItems}
                             data={roomNumbers[0]}
                             subCat={subcategory}
+                            onDone={updateBOQTotal}
+                           
                           />
                         </div>
                       ))}
@@ -744,11 +774,18 @@ const App = () => {
           ))
         )}
       </div>
-      <Cart
+      {/* <Cart
         open={open} setOpen={setOpen} cartItems={cartItems}
-      />
-      <button className='cart-icon fixed bottom-10 right-10 bg-black text-white rounded-xl ' onClick={toggleCart}><LucideShoppingBag size={40} /></button>
-
+      />       */}
+      <div>
+      {/* <button className='cart-icon fixed bottom-10 right-10 bg-black text-white rounded-xl ' onClick={toggleCart}><ShoppingCart size={40} /></button> */}
+        <h4 className='fixed right-10 bottom-2 bg-gray-300 px-3 rounded'>Total Cost: ₹
+          {totalBOQCost}
+        </h4>
+      </div>
+      <div className='flex'>
+        <button className='bg-blue-500 text-white font-semibold px-5 py-1.5 rounded-sm mb-2 hover:bg-green-500 m-auto'>Download BOQ</button>
+      </div>
     </div>
   );
 };
