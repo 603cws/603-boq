@@ -353,7 +353,7 @@ const Card = ({ title, image, details, product_variants = [], addOns, initialMin
   const handleStartClick = (subCat) => {
     const priceValue = Number(price[subCat]); // Ensure it's a number
     const totalPrice = Number(calculateTotalPrice); // Ensure it's a number
-  
+
     if (priceValue - totalPrice > -1) {
       setPrice(subCat, -totalPrice);
     } else {
@@ -699,11 +699,11 @@ const App = () => {
         ...prevPrices,
         [subCat]: Math.max(0, (prevPrices[subCat] || 0) + value), // Ensure price doesn't go below 0
       };
-  
+
       // Update the BOQ Total
       const total = Object.values(updatedPrices).reduce((acc, curr) => acc + curr, 0);
       setTotalBOQCost(total);
-  
+
       return updatedPrices; // Ensure the new state is returned
     });
   };
@@ -764,48 +764,81 @@ const App = () => {
           Object.entries(groupedProducts).map(([category, subcategories]) => (
             <div key={category} className="category-section">
               <h2>{category}</h2>
-              {Object.entries(subcategories).map(([subcategory, products]) => (
-                <div key={subcategory} className="subcategory-section">
-                  <h3
-                    className="subcategory-heading"
-                    onClick={() => toggleSubcategory(subcategory)}
-                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                  >
-                    {subcategory}
-                    <h6 className="text-xs" style={{ margin: '0 10px' }}>
-                      Total Cost of {subcategory}: ₹ {price[subcategory] || 0}
-                    </h6>
-                    <span style={{ marginLeft: '50px' }}>
-                      {expandedSubcategory === subcategory ? (
-                        <ArrowUpNarrowWide size={20} />
-                      ) : (
-                        <ArrowDownNarrowWide size={20} />
-                      )}
-                    </span>
+              {Object.entries(subcategories)
+                .filter(([subcategory]) => {
+                  const roomCount = roomNumbers[0]; // Assuming roomNumbers[0] holds the counts
 
-                  </h3>
-                  {expandedSubcategory === subcategory && (
-                    <div className="subcategory-content">
-                      {products.map((product) => (
-                        <div key={product.id}>
-                          <Card
-                            addOns={product.addons}
-                            product_variants={product.product_variants}
-                            initialMinimized={product.initialMinimized}
-                            // onAddToCart={handleAddToCart}
-                            // setCartItems={setCartItems}
-                            data={roomNumbers[0]}
-                            subCat={subcategory}
-                            onDone={updateBOQTotal}
-                            setPrice={handlePrice}
-                            price={price}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+                  // Helper function to normalize strings by removing special characters and spaces
+                  const normalize = (str) =>
+                    str.toLowerCase().replace(/[^a-z0-9]/g, ''); // Keeps only alphanumeric characters
+
+                  // Normalize subcategory and roomNumbers keys for comparison
+                  const normalizedSubcategory = normalize(subcategory);
+
+                  // Check if normalized subcategory matches any normalized roomNumber key
+                  const matchFound = Object.keys(roomCount).some((roomKey) => {
+                    const normalizedRoomKey = normalize(roomKey);
+                    return normalizedSubcategory.includes(normalizedRoomKey); // Match logic
+                  });
+
+                  if (!matchFound) {
+                    console.warn(`Subcategory "${subcategory}" does not match any roomNumbers keys.`);
+                    return false; // Exclude subcategories that do not match
+                  }
+
+                  // Check if the count for the matching room is not 0
+                  const matchingRoomKey = Object.keys(roomCount).find((roomKey) =>
+                    normalizedSubcategory.includes(normalize(roomKey))
+                  );
+
+                  if (roomCount[matchingRoomKey] === 0) {
+                    console.log(`Excluding subcategory "${subcategory}" because its count is 0.`);
+                    return false; // Exclude if count is 0
+                  }
+
+                  return true; // Include subcategory
+                })
+                .map(([subcategory, products]) => (
+                  <div key={subcategory} className="subcategory-section">
+                    <h3
+                      className="subcategory-heading"
+                      onClick={() => toggleSubcategory(subcategory)}
+                      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    >
+                      {subcategory}
+                      <h6 className="text-xs" style={{ margin: '0 10px' }}>
+                        Total Cost of {subcategory}: ₹ {price[subcategory] || 0}
+                      </h6>
+                      <span style={{ marginLeft: '50px' }}>
+                        {expandedSubcategory === subcategory ? (
+                          <ArrowUpNarrowWide size={20} />
+                        ) : (
+                          <ArrowDownNarrowWide size={20} />
+                        )}
+                      </span>
+                    </h3>
+                    {expandedSubcategory === subcategory && (
+                      <div className="subcategory-content">
+                        {products.map((product) => (
+                          <div key={product.id}>
+                            <Card
+                              addOns={product.addons}
+                              product_variants={product.product_variants}
+                              initialMinimized={product.initialMinimized}
+                              // onAddToCart={handleAddToCart}
+                              // setCartItems={setCartItems}
+                              data={roomNumbers[0]}
+                              subCat={subcategory}
+                              onDone={updateBOQTotal}
+                              setPrice={handlePrice}
+                              price={price}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
           ))
         )}
