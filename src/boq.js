@@ -287,7 +287,7 @@ import './boq.css';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 // import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
-const Card = ({ title, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone, price, setPrice }) => {
+const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone, addon_variants = [], setPrice, selectedData, setSelectedData, productsData }) => {
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const [selectedAddOns, setSelectedAddOns] = useState({});
 
@@ -312,11 +312,29 @@ const Card = ({ title, image, details, product_variants = [], addOns, initialMin
     setIsImageLoaded(true);
   };
 
-  const handleAddOnChange = (addOn, isChecked) => {
-    setSelectedAddOns((prevSelectedAddOns) => ({
-      ...prevSelectedAddOns,
-      [addOn.title]: isChecked ? addOn.price : 0,
-    }));
+  const handleAddOnChange = (variant, isChecked) => {
+    // Ensure the variant object has title and price
+    if (!variant || !variant.title || variant.price == null) return;
+
+    setSelectedAddOns((prevSelectedAddOns) => {
+      if (isChecked) {
+        // Add the selected add-on
+        return {
+          ...prevSelectedAddOns,
+          [variant.title]: variant.price,
+        };
+      } else {
+        // Remove the unselected add-on
+        const { [variant.title]: _, ...rest } = prevSelectedAddOns;
+        return rest;
+      }
+    });
+    // setSelectedData((prevSelectedData) => ({
+    //   ...prevSelectedData,
+    //   title: variant.title, // Update with the selected add-on title
+    //   price: variant.price,
+    //   image: variant.image,
+    // }));
   };
 
   const calculateTotalPrice = useMemo(() => {
@@ -362,13 +380,47 @@ const Card = ({ title, image, details, product_variants = [], addOns, initialMin
     toggleMinimize();
   };
 
+  const [selectedProductId, setSelectedProductId] = useState(null); // Dynamic selection
+
+
+  const handelSelectedData = () => {
+
+    const selectedProduct = productsData.find((product) => product.id === selectedProductId);
+
+    if (!selectedProduct) {
+      console.error("Product not found.");
+      return;
+    }
+
+    const productData = {
+      category: selectedProduct.category,
+      subcategory: selectedProduct.subcategory,
+      subcategory1: selectedProduct.subcategory1,
+      product_variant: product_variants.map(product => ({
+        title: product.title,
+        price: product.price,
+        description: product.description,
+        image: product.image,
+      })),
+      addons: addon_variants.map(addon => ({
+        title: addon.title,
+        price: addon.price,
+        image: addon.image
+      }))
+    };
+
+    // Update selectedData state
+    setSelectedData(productData);
+  };
+  console.log("selected data", selectedData)
+
   if (!isMinimized) {
     return (
-      <div className="minimized-card">
+      <div className="minimized-card mb-5">
         <div className='flex justify-between'>
           <div className="info">
             <span>{selectedTitle}</span>
-            <p>Base Price: ₹{basePrice}</p>
+            <p>Price/Product: ₹{basePrice}</p>
             <p>Total Price: ₹{calculateTotalPrice}</p>
           </div>
           {/* Attach the remove function to the Start button */}
@@ -456,22 +508,24 @@ const Card = ({ title, image, details, product_variants = [], addOns, initialMin
         <ul>
           {addOns.map((addOn, index) => (
             <li key={index} className="hover-card" style={{ position: 'relative', padding: '10px', borderRadius: '8px' }}>
-              <label style={{ display: 'flex', alignItems: 'center' }}>
-                <span className="hover-trigger">
-                  <input
-                    type="checkbox"
-                    onChange={(e) => handleAddOnChange(addOn, e.target.checked)}
-                  />
-                  {addOn.title} (+₹{addOn.price})
-                </span>
-                {addOn.image && (
-                  <img
-                    src={addOn.image}
-                    alt={addOn.title}
-                    className="hover-image"
-                  />
-                )}
+              <label style={{ display: 'flex', alignItems: 'center' }} className="hover-trigger">
+                {addOn.title}
               </label>
+              <ul className="addon-type text-xs">
+                {addon_variants
+                  .filter((variant) => variant.addonid === addOn.id) // Check if variant belongs to the current addOn
+                  .map((variant, index) => (
+                    <li key={variant.id || index} className='addon-variant flex flex-row'>
+                      <input type="checkbox" id={`addon-${variant.id || index}`} onChange={(e) => handleAddOnChange(variant, e.target.checked)} />
+                      <label htmlFor={`addon-${variant.id || index}`}>{variant.title} (+₹{variant.price})</label>
+                      <img
+                        src={variant.image}
+                        alt={variant.title}
+                        className="hover-image"
+                      />
+                    </li>
+                  ))}
+              </ul>
             </li>
           ))}
         </ul>
@@ -479,10 +533,20 @@ const Card = ({ title, image, details, product_variants = [], addOns, initialMin
 
       <CardSection className="card-summary">
         <h4>Summary</h4>
-        <p>Base Price: ₹{basePrice}</p>
+        <p>Price/Product: ₹{basePrice}</p>
         <p>Add-Ons: ₹{Object.values(selectedAddOns).reduce((total, price) => total + price, 0)}</p>
         <p>Total Price: ₹{calculateTotalPrice}</p>
-        <button className="done-button" onClick={handleDoneClick}>Done</button>
+        {/* <button className="done-button" onClick={handleDoneClick}>Done</button>  */}
+
+        
+        <button
+        className="done-button"
+        onClick={() => {          
+          handelSelectedData();
+        }}
+        >
+        Done
+      </button>
       </CardSection>
     </div>
   );
@@ -504,6 +568,10 @@ const App = () => {
   // const [open, setOpen] = useState(false);
   // const [cartItems, setCartItems] = useState([]);
   const [totalBOQCost, setTotalBOQCost] = useState(0);
+  const [selectedData, setSelectedData] = useState({
+    product: {},
+    addon: {}
+  });
 
 
   const categories = [
@@ -566,7 +634,9 @@ const App = () => {
         .from("products")
         .select(`
           *,
-          addons (*),
+          addons(*,
+            addon_variants(*)
+          ),
           product_variants (*)
         `);
 
@@ -575,7 +645,10 @@ const App = () => {
       // Flatten all images from products, addons, and product_variants
       const allImages = data.flatMap(product => [
         ...product.product_variants.map(variant => variant.image),
-        ...product.addons.map(addon => addon.image)
+        ...product.addons.flatMap(addon => [
+          addon.image,
+          ...addon.addon_variants.map(variant => variant.image)
+        ])
       ]).filter(Boolean); // Remove null or undefined images
 
       const uniqueImages = [...new Set(allImages)];
@@ -596,7 +669,11 @@ const App = () => {
         })),
         addons: product.addons.map(addon => ({
           ...addon,
-          image: urlMap[addon.image] || ''
+          image: urlMap[addon.image] || '',
+          addon_variants: addon.addon_variants.map(variant => ({
+            ...variant,
+            image: urlMap[variant.image] || ''
+          }))
         }))
       }));
 
@@ -823,6 +900,14 @@ const App = () => {
                           <div key={product.id}>
                             <Card
                               addOns={product.addons}
+                              addon_variants={
+                                product.addons?.flatMap((addon) =>
+                                  addon.addon_variants?.map((variant) => ({
+                                    ...variant,
+                                    addonTitle: addon.title, // Optionally add addon title to the variant
+                                  }))
+                                ) || []
+                              }
                               product_variants={product.product_variants}
                               initialMinimized={product.initialMinimized}
                               // onAddToCart={handleAddToCart}
@@ -832,6 +917,9 @@ const App = () => {
                               onDone={updateBOQTotal}
                               setPrice={handlePrice}
                               price={price}
+                              selectedData={selectedData}
+                            setSelectedData={setSelectedData}
+                            productsData={productsData}
                             />
                           </div>
                         ))}

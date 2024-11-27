@@ -56,24 +56,33 @@
   position: absolute;
   left: 60px;
   /* Start the image off-screen to the left */
-  top: -100px;
+  top: -70px;
   opacity: 0;
   transition: opacity 0.3s ease, transform 0.3s ease;
   z-index: 999;
-
 }
 
 /* Animation to slide the image in from the left */
-.hover-card:hover .hover-image {
+.addon-variant:hover .hover-image {
   display: block;
   animation: slideIn 0.5s forwards;
 }
 
 /* Darken the card on hover */
 .hover-card:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  /* background-color: rgba(0, 0, 0, 0.1); */
   /* Adjust color and opacity as needed */
   transition: background-color 0.3s ease;
+}
+.addon-type{
+  display: none;
+}
+.hover-card:hover .addon-type{
+  display: block;
+  
+}
+.addon-type li:hover{
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* Keyframes for the slide-in effect */
@@ -631,6 +640,7 @@ video {
   width: 100%;
 }
 
+
 @media (max-width: 640px) {
   .container {
     max-width: 640px;
@@ -642,7 +652,7 @@ video {
     animation: fadeInOut 4s forwards;
     /* 4s duration: adjust as desired */
   }
-
+  
   /* Keyframes for fade-in and fade-out effect */
   @keyframes fadeInOut {
     0% {
@@ -853,7 +863,6 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #edf2f7;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  cursor: pointer;
   transition: all 0.3s ease;
   max-height: 160px;
 }
@@ -1175,14 +1184,15 @@ h1, h2, h3, h4, h5, h6 {
 .slick-btn{
   background: #03040756;
   border: none;
+  right: 0px;
 }
 
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .card-container {
-    grid-template-columns: 1fr;
-  }
+  /* .card-container {
+    grid-template-columns: 2fr ;
+  } */
   
   .search-filter {
     flex-direction: column;
@@ -1192,6 +1202,9 @@ h1, h2, h3, h4, h5, h6 {
   .search-bar, .price-slider {
     margin: 10px 0;
   }
+  /* .color-thumbnail{
+    width: 10% !important;
+  } */
 }
 @media(max-width:425px){
   .room-data-box{

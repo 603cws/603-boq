@@ -7,7 +7,7 @@ import 'slick-carousel/slick/slick-theme.css';
 // Custom Next Arrow component for carousel
 const NextArrow = ({ onClick }) => (
   <button
-    className="slick-next absolute top-1/2 right-0 transform -translate-y-1/2 p-2 rounded-full shadow-lg slick-btn"
+    className="slick-next absolute top-1/2 right-5 transform -translate-y-1/2 p-2 rounded-full shadow-lg slick-btn"
     onClick={onClick}
   >
    
@@ -60,7 +60,7 @@ const RoomDataBox = ({ roomData }) => {
   
 
   return (
-    <div className="room-data-carousel-container relative w-full">
+    <div className="room-data-carousel-container relative w-full ">
       <Slider {...settings}>
         {roomEntries.map(([key, value]) => (
           <div key={key} className="room-data-box-tooltip">
