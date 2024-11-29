@@ -287,7 +287,7 @@ import './boq.css';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 // import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
-const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone, addon_variants = [], setPrice, selectedData, setSelectedData, productsData }) => {
+const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone, addon_variants = [], setPrice, selectedData, setSelectedData, product }) => {
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const [selectedAddOns, setSelectedAddOns] = useState({});
 
@@ -306,6 +306,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
   const [selectedDetails, setSelectedDetails] = useState(product_variants[0]?.details || null);
   const [selectedPrice, setSelectedPrice] = useState(product_variants[0]?.price || 0);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+
   const basePrice = selectedPrice;  //price
 
   const handleImageLoad = () => {
@@ -367,8 +368,9 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
   // useEffect(() => {
   //   updateBOQTotal(calculateTotalPrice);
   // }, [calculateTotalPrice]);
+  const [selectedProductId, setSelectedProductId] = useState(null); // Dynamic selection
 
-  const handleStartClick = (subCat) => {
+  const handleStartClick = (subCat, productID) => {
     const priceValue = Number(price[subCat]); // Ensure it's a number
     const totalPrice = Number(calculateTotalPrice); // Ensure it's a number
 
@@ -378,66 +380,77 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       setPrice(subCat, 0);
     }
     toggleMinimize();
+    setSelectedProductId(productID);
+    console.log(productID)
   };
-
-  const [selectedProductId, setSelectedProductId] = useState(null); // Dynamic selection
-
+  // console.log("selected product id", selectedProductId);
+  // console.log("products data", productsData)
 
   const handelSelectedData = () => {
-
-    const selectedProduct = productsData.find((product) => product.id === selectedProductId);
-
-    if (!selectedProduct) {
-      console.error("Product not found.");
+    if (!product || product.id !== selectedProductId) {
+      console.error("Product not found or ID does not match.");
       return;
     }
-
     const productData = {
-      category: selectedProduct.category,
-      subcategory: selectedProduct.subcategory,
-      subcategory1: selectedProduct.subcategory1,
-      product_variant: product_variants.map(product => ({
-        title: product.title,
-        price: product.price,
-        description: product.description,
-        image: product.image,
-      })),
-      addons: addon_variants.map(addon => ({
-        title: addon.title,
-        price: addon.price,
-        image: addon.image
-      }))
+      id: product.id,
+      category: product.category,
+      subcategory: product.subcategory,
+      subcategory1: product.subcategory1,
+      product_variant: {
+        variant_title: selectedTitle,
+        variant_iamge: selectedImage,
+        variant_details: selectedDetails,
+        variant_price: selectedPrice
+      },
+      addons: selectedAddOns,
     };
 
     // Update selectedData state
-    setSelectedData(productData);
+    setSelectedData(prevData => {
+      const finalData = [...prevData, productData];
+      // Save the updated data to localStorage
+      localStorage.setItem('selectedData', JSON.stringify(finalData));
+      return finalData;
+    });
   };
+  const clearSelectedData = () => {
+    localStorage.removeItem('selectedData');
+  };
+  
   console.log("selected data", selectedData)
-
+  // console.log("product",product)
   if (!isMinimized) {
     return (
-      <div className="minimized-card mb-5">
-        <div className='flex justify-between'>
-          <div className="info">
-            <span>{selectedTitle}</span>
-            <p>Price/Product: ₹{basePrice}</p>
-            <p>Total Price: ₹{calculateTotalPrice}</p>
+      <>
+
+        <div key={product.id} className="minimized-card mb-5">
+          <div className='flex justify-between'>
+            <div className="info">
+              <span>{selectedTitle}</span>
+              <p>Price/Product: ₹{basePrice}</p>
+              <p>Total Price: ₹{calculateTotalPrice}</p>
+            </div>
+            {/* Attach the remove function to the Start button */}
+            <button
+              className="start-button"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering `toggleMinimize`
+                /*handleRemoveFromCart(selectedTitle);*/ // Call remove function
+                handleStartClick(subCat, product.id);
+              }}
+            >
+              Start
+            </button>
           </div>
-          {/* Attach the remove function to the Start button */}
-          <button
-            className="start-button"
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering `toggleMinimize`
-              /*handleRemoveFromCart(selectedTitle);*/ // Call remove function
-              handleStartClick(subCat);
-            }}
-          >
-            Start
-          </button>
         </div>
-      </div>
+
+      </>
     );
   }
+  // console.log("productsData length:", product.length);
+  // console.log("productsData content:", product);
+  // console.log("sub category",subCat)
+
   // const handleAddToCartClick = () => {
   //   const cartItem = {
   //     title: selectedTitle,
@@ -463,8 +476,9 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     onDone(calculateTotalPrice); // Pass the total price to the parent
     setPrice(subCat, calculateTotalPrice);
     toggleMinimize();
+    handelSelectedData();
+    // clearSelectedData()
   };
-
   return (
     <div className="card-container">
       <CardSection className="card-image">
@@ -536,17 +550,17 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         <p>Price/Product: ₹{basePrice}</p>
         <p>Add-Ons: ₹{Object.values(selectedAddOns).reduce((total, price) => total + price, 0)}</p>
         <p>Total Price: ₹{calculateTotalPrice}</p>
-        {/* <button className="done-button" onClick={handleDoneClick}>Done</button>  */}
+        <button className="done-button" onClick={handleDoneClick}>Done</button>
 
-        
-        <button
-        className="done-button"
-        onClick={() => {          
-          handelSelectedData();
-        }}
+
+        {/* <button
+          className="done-button"
+          onClick={() => {
+            handelSelectedData();
+          }}
         >
-        Done
-      </button>
+          Done
+        </button> */}
       </CardSection>
     </div>
   );
@@ -568,10 +582,7 @@ const App = () => {
   // const [open, setOpen] = useState(false);
   // const [cartItems, setCartItems] = useState([]);
   const [totalBOQCost, setTotalBOQCost] = useState(0);
-  const [selectedData, setSelectedData] = useState({
-    product: {},
-    addon: {}
-  });
+  const [selectedData, setSelectedData] = useState([]);
 
 
   const categories = [
@@ -688,6 +699,13 @@ const App = () => {
   useEffect(() => {
     Promise.all([fetchRoomData(), fetchProductsData()]);
   }, []);
+  useEffect(() => {
+    const savedData = localStorage.getItem('selectedData');
+
+    if (savedData) {
+      setSelectedData(JSON.parse(savedData)); // Parse and set the data
+    }
+  }, []);
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -712,7 +730,6 @@ const App = () => {
     const total = Object.values(price).reduce((acc, curr) => acc + curr, 0); // Sum of all prices
     setTotalBOQCost(total);
   };
-  console.log("boq total: ", totalBOQCost)
 
   const filteredProducts = useMemo(() => {
     return productsData.filter((product) => {
@@ -918,8 +935,10 @@ const App = () => {
                               setPrice={handlePrice}
                               price={price}
                               selectedData={selectedData}
-                            setSelectedData={setSelectedData}
-                            productsData={productsData}
+                              setSelectedData={setSelectedData}
+                              product={product}
+                              categories={categories}
+                              groupedProducts={groupedProducts}
                             />
                           </div>
                         ))}
