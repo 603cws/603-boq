@@ -406,11 +406,27 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     };
 
     // Update selectedData state
-    setSelectedData(prevData => {
-      const finalData = [...prevData, productData];
-      // Save the updated data to localStorage
-      localStorage.setItem('selectedData', JSON.stringify(finalData));
-      return finalData;
+    setSelectedData((prevData) => {
+      // Find if the product already exists by product.id
+      const productIndex = prevData.findIndex(
+        (item) => item.id === product.id // Check by `id` not by `product_variant.id`
+      );
+  
+      let updatedData;
+  
+      if (productIndex !== -1) {
+        // Product exists, update it
+        updatedData = [...prevData];
+        updatedData[productIndex] = { ...updatedData[productIndex], ...productData };
+      } else {
+        // Product does not exist, add it
+        updatedData = [...prevData, productData];
+      }
+  
+      // Save updated data to localStorage
+      localStorage.setItem("selectedData", JSON.stringify(updatedData));
+  
+      return updatedData;
     });
   };
   const clearSelectedData = () => {
@@ -477,7 +493,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     setPrice(subCat, calculateTotalPrice);
     toggleMinimize();
     handelSelectedData();
-    // clearSelectedData()
+    // clearSelectedData();
   };
   return (
     <div className="card-container">
