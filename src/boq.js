@@ -285,6 +285,9 @@ import RoomDataBox from './RoomDataBox';
 import './boq.css';
 // import Cart from './Cart';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
+import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import fs from "file-saver";
 // import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
 const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone, addon_variants = [], setPrice, selectedData, setSelectedData, product }) => {
@@ -313,33 +316,35 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     setIsImageLoaded(true);
   };
 
-  const handleAddOnChange = (variant, isChecked) => {
-    // Ensure the variant object has title and price
-    if (!variant || !variant.title || variant.price == null) return;
+  const handleAddOnChange = (variant, isChecked, addOn) => {
+    // Ensure the variant object has title, price, and image
+    if (!variant || !variant.title || variant.price == null || !variant.image) return;
 
     setSelectedAddOns((prevSelectedAddOns) => {
       if (isChecked) {
-        // Add the selected add-on
+        // Add the selected add-on with separate fields for title, price, and image
         return {
           ...prevSelectedAddOns,
-          [variant.title]: variant.price,
+          [variant.title]: {
+            addon_title: variant.title || "No Title", // Store the title of the add-on
+            addon_price: variant.price || "No Price", // Store the price of the add-on
+            addon_image: variant.image || "No Image", // Store the image of the add-on
+          }
         };
       } else {
-        // Remove the unselected add-on
+        // Remove the unselected add-on by title
         const { [variant.title]: _, ...rest } = prevSelectedAddOns;
         return rest;
       }
     });
-    // setSelectedData((prevSelectedData) => ({
-    //   ...prevSelectedData,
-    //   title: variant.title, // Update with the selected add-on title
-    //   price: variant.price,
-    //   image: variant.image,
-    // }));
   };
 
+
   const calculateTotalPrice = useMemo(() => {
-    const totalAddOnPrice = Object.values(selectedAddOns).reduce((total, addOnPrice) => total + addOnPrice, basePrice);
+    const totalAddOnPrice = Object.values(selectedAddOns).reduce(
+      (total, addOn) => total + (addOn.addon_price || 0), // Access `addon_price` explicitly, default to 0 if not present
+      0
+    );
 
     const normalizedSubCat = subCat.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -351,7 +356,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     }
 
     // Calculation for 'linear' using basePrice and addOn
-    const linearTotal = (quantity * totalAddOnPrice);
+    const linearTotal = (quantity || 0) * (basePrice + totalAddOnPrice);
     // console.log('bp: '+basePrice+ 'quantity: '+ quantity + 'total: ' +totalAddOnPrice+ 'lTotal: ' + linearTotal);
     return linearTotal;
   }, [selectedAddOns, basePrice, data]);
@@ -402,7 +407,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         variant_details: selectedDetails,
         variant_price: selectedPrice
       },
-      addons: selectedAddOns,
+      addons:selectedAddOns,
     };
 
     // Update selectedData state
@@ -411,9 +416,9 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       const productIndex = prevData.findIndex(
         (item) => item.id === product.id // Check by `id` not by `product_variant.id`
       );
-  
+
       let updatedData;
-  
+
       if (productIndex !== -1) {
         // Product exists, update it
         updatedData = [...prevData];
@@ -422,17 +427,17 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         // Product does not exist, add it
         updatedData = [...prevData, productData];
       }
-  
+
       // Save updated data to localStorage
       localStorage.setItem("selectedData", JSON.stringify(updatedData));
-  
+
       return updatedData;
     });
   };
   const clearSelectedData = () => {
     localStorage.removeItem('selectedData');
   };
-  
+
   console.log("selected data", selectedData)
   // console.log("product",product)
   if (!isMinimized) {
@@ -546,7 +551,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
                   .filter((variant) => variant.addonid === addOn.id) // Check if variant belongs to the current addOn
                   .map((variant, index) => (
                     <li key={variant.id || index} className='addon-variant flex flex-row'>
-                      <input type="checkbox" id={`addon-${variant.id || index}`} onChange={(e) => handleAddOnChange(variant, e.target.checked)} />
+                      <input type="checkbox" id={`addon-${variant.id || index}`} onChange={(e) => handleAddOnChange(variant, e.target.checked, addOn.title)} />
                       <label htmlFor={`addon-${variant.id || index}`}>{variant.title} (+₹{variant.price})</label>
                       <img
                         src={variant.image}
@@ -564,7 +569,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       <CardSection className="card-summary">
         <h4>Summary</h4>
         <p>Price/Product: ₹{basePrice}</p>
-        <p>Add-Ons: ₹{Object.values(selectedAddOns).reduce((total, price) => total + price, 0)}</p>
+        <p>Add-Ons: ₹{Object.values(selectedAddOns).reduce((total, addOn) => total + addOn.addon_price, 0)}</p>
         <p>Total Price: ₹{calculateTotalPrice}</p>
         <button className="done-button" onClick={handleDoneClick}>Done</button>
 
@@ -817,7 +822,117 @@ const App = () => {
       return updatedPrices; // Ensure the new state is returned
     });
   };
+  const fetchImageAsBase64 = async (url) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(",")[1]); // Remove the `data:image/...;base64,` prefix
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error("Failed to fetch image from URL:", url, error);
+      return null;
+    }
+  };
+  
 
+  const handleDownloadExcel = async () => {
+    const data = JSON.parse(localStorage.getItem("selectedData")) || [];
+  
+    if (data.length === 0) {
+      console.error("No data to export");
+      return;
+    }
+  
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Selected Products");
+  
+    worksheet.columns = [
+      { header: "ID", key: "id", width: 20 },
+      { header: "Category", key: "category", width: 20 },
+      { header: "Subcategory", key: "subcategory", width: 20 },
+      { header: "SubSubcategory", key: "subsubcategory", width: 20 },
+      { header: "Variant Title", key: "variant_title", width: 25 },
+      { header: "Variant Image", key: "variant_image", width: 20 },
+      { header: "Variant Details", key: "variant_details", width: 30 },
+      { header: "Variant Price", key: "variant_price", width: 15 },
+      { header: "Addon Title", key: "addon_title", width: 25 },
+      { header: "Addon Price", key: "addon_price", width: 15 },
+      { header: "Addon Image", key: "addon_image", width: 30 },
+    ];
+  
+    for (const item of data) {
+      const row = worksheet.addRow({
+        id: item.id,
+        category: item.category,
+        subcategory: item.subcategory,
+        subsubcategory: item.subcategory1,
+        variant_title: item.product_variant?.variant_title || "No Title",
+        variant_image: "",
+        variant_details: item.product_variant?.variant_details || "No Details",
+        variant_price: item.product_variant?.variant_price || "No Price",
+        addon_title: Object.values(item.addons || {}).map((a) => a.addon_title).join(", "),
+        addon_price: Object.values(item.addons || {}).map((a) => a.addon_price).join(", "),
+        addon_image: "",
+      });
+  
+      // Fetch and insert the variant image
+      if (item.product_variant?.variant_iamge) {
+        const variantBase64 = await fetchImageAsBase64(item.product_variant.variant_iamge);
+        if (variantBase64) {
+          const variantImageId = workbook.addImage({
+            base64: variantBase64,
+            extension: "png",
+          });
+          worksheet.addImage(variantImageId, `F${row.number}:F${row.number}`);
+        }
+      }
+  
+      // Fetch and insert add-on images
+      if (item.addons) {
+        const cellRef = `K${row.number}`;
+        let addOnImages = [];
+  
+        for (const addon of Object.values(item.addons)) {
+          if (addon.addon_image) {
+            try {
+              const addonBase64 = await fetchImageAsBase64(addon.addon_image);
+              if (addonBase64) {
+                const addonImageId = workbook.addImage({
+                  base64: addonBase64,
+                  extension: "png",
+                });
+  
+                // Save image ID for stacking later
+                addOnImages.push(addonImageId);
+              }
+            } catch (error) {
+              console.error("Failed to fetch add-on image:", addon.addon_image, error);
+            }
+          }
+        }
+  
+        // Stack multiple images in the same cell
+        addOnImages.forEach((imageId, idx) => {
+          worksheet.addImage(imageId, {
+            tl: { col: 10, row: row.number - 1 + idx * 0.2 }, // Adjust vertical positioning
+            ext: { width: 50, height: 50 },
+          });
+        });
+      }
+    }
+  
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    fs.saveAs(blob, "SelectedData_with_Images.xlsx");
+  };
+  
+  
+  
+  
   return (
     <div className="App">
       <div className="search-filter">
@@ -976,7 +1091,7 @@ const App = () => {
         </h4>
       </div>
       <div className='flex'>
-        <button className='bg-blue-500 text-white font-semibold px-5 py-1.5 rounded-sm mb-2 hover:bg-green-500 m-auto'>Download BOQ</button>
+        <button onClick={handleDownloadExcel} className='bg-blue-500 text-white font-semibold px-5 py-1.5 rounded-sm mb-2 hover:bg-green-500 m-auto'>Download BOQ</button>
       </div>
     </div>
   );
