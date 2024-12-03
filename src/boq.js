@@ -1,283 +1,3 @@
-// import React, { useState, useMemo, useEffect } from 'react';
-// import './boq.css';
-// import { Slider, Skeleton } from '@mui/material';
-// import { supabase } from './supabase';
-
-// const Card = ({ title, price, image, details, addOns, initialMinimized = false, roomData }) => {
-//   const [selectedAddOns, setSelectedAddOns] = useState({});
-//   const [isMinimized, setIsMinimized] = useState(initialMinimized);
-//   const basePrice = price;
-
-//   const handleAddOnChange = (addOn, isChecked) => {
-//     setSelectedAddOns((prevSelectedAddOns) => ({
-//       ...prevSelectedAddOns,
-//       [addOn.name]: isChecked ? addOn.price : 0,
-//     }));
-//   };
-
-//   const calculateTotalPrice = useMemo(() => {
-//     return Object.values(selectedAddOns).reduce((total, addOnPrice) => total + addOnPrice, basePrice);
-//   }, [selectedAddOns, basePrice]);
-
-//   const toggleMinimize = () => setIsMinimized((prev) => !prev);
-
-//   if (isMinimized) {
-//     return (
-//       <div className="minimized-card" onClick={toggleMinimize}>
-//         <span>{title}</span>
-//         <div className="info">
-//           <p>Base Price: ₹{basePrice}</p>
-//           <p>Total Price: ₹{calculateTotalPrice}</p>
-//         </div>
-//         <button className="start-button">Start</button>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="card-container">
-//       <CardSection className="card-image">
-//         <img src={image} alt={title} className="image" />
-//       </CardSection>
-
-//       <CardSection className="card-features">
-//         <h3>{title}</h3>
-//         <p>{details}</p>
-//         {roomData && (
-//           <div className="room-info">
-//             <p>Room Data:</p>
-//             <ul>
-//               {Object.entries(roomData).map(([key, value]) => (
-//                 <li key={key}>{`${key}: ${value}`}</li>
-//               ))}
-//             </ul>
-//           </div>
-//         )}
-//       </CardSection>
-
-//       <CardSection className="card-add-ons">
-//         <h3>ADD ON</h3>
-//         <ul>
-//           {addOns.map((addOn, index) => (
-//             <li key={index}>
-//               <label>
-//                 <input
-//                   type="checkbox"
-//                   onChange={(e) => handleAddOnChange(addOn, e.target.checked)}
-//                 />
-//                 {addOn.name} (+₹{addOn.price})
-//               </label>
-//             </li>
-//           ))}
-//         </ul>
-//       </CardSection>
-
-//       <CardSection className="card-summary">
-//         <h4>Summary</h4>
-//         <p>Base Price: ₹{basePrice}</p>
-//         <p>Add-Ons: ₹{Object.values(selectedAddOns).reduce((total, price) => total + price, 0)}</p>
-//         <p>Total Price: ₹{calculateTotalPrice}</p>
-//         <button className="done-button" onClick={toggleMinimize}>Done</button>
-//       </CardSection>
-//     </div>
-//   );
-// };
-
-// const CardSection = ({ className, children }) => {
-//   return <div className={`card ${className}`}>{children}</div>;
-// };
-
-// const App = () => {
-//   const [searchQuery, setSearchQuery] = useState('');
-//   const [priceRange, setPriceRange] = useState([1000, 12000]);
-//   const [productsData, setProductData] = useState([]);
-//   const categories = [
-//     'Furniture', 
-//     'Civil / Plumbing', 
-//     'Lighting', 
-//     'Electrical', 
-//     'Partitions- door / windows / ceilings',
-//     'Paint', 
-//     'HVAC', 
-//     'Smart Solutions', 
-//     'Flooring', 
-//     'Accessories'
-//   ];
-//   const [loading, setLoading] = useState(true);
-//   const [roomNumbers, setRoomNumbers] = useState([]);
-
-//   async function fetchRoomData() {
-//     try {
-//       const { data, error } = await supabase
-//         .from('areas')
-//         .select()
-//         .order('created_at', { ascending: false })
-//         .limit(1);
-
-//       if (error) throw error;
-
-//       if (data && data.length > 0) {
-//         const latestRoomData = data[0];
-//         const roomsArray = {
-// linear: latestRoomData.linear,
-// ltype: latestRoomData.ltype,
-// md: latestRoomData.md,
-// manager: latestRoomData.manager,
-// small: latestRoomData.small,
-// ups: latestRoomData.ups,
-// bms: latestRoomData.bms,
-// server: latestRoomData.server,
-// reception: latestRoomData.reception,
-// lounge: latestRoomData.lounge,
-// sales: latestRoomData.sales,
-// phonebooth: latestRoomData.phonebooth,
-// discussionroom: latestRoomData.discussionroom,
-// interviewroom: latestRoomData.interviewroom,
-// conferenceroom: latestRoomData.conferenceroom,
-// boardroom: latestRoomData.boardroom,
-// meetingroom: latestRoomData.meetingroom,
-// meetingroomlarge: latestRoomData.meetingroomlarge,
-// hrroom: latestRoomData.hrroom,
-// financeroom: latestRoomData.financeroom,
-//         };
-//         setRoomNumbers([roomsArray]);
-//       }
-//     } catch (error) {
-//       console.error('Error fetching room data:', error);
-//     }
-//   }
-
-//   async function fetchProductsData() {
-//     try {
-//       const { data, error } = await supabase
-//         .from("products")
-//         .select(`
-//           *,
-//           addons (*)
-//         `);
-
-//       if (error) throw error;
-
-//       const allImages = data.flatMap(product => [product.image, ...product.addons.map(addon => addon.image)]);
-//       const uniqueImages = [...new Set(allImages)];
-
-//       const { data: signedUrls, error: signedUrlError } = await supabase.storage
-//         .from("addon")
-//         .createSignedUrls(uniqueImages, 3600);
-
-//       if (signedUrlError) throw signedUrlError;
-
-//       const urlMap = Object.fromEntries(signedUrls.map(item => [item.path, item.signedUrl]));
-
-//       const processedData = data.map(product => ({
-//         ...product,
-//         image: urlMap[product.image] || '',
-//         addons: product.addons.map(addon => ({
-//           ...addon,
-//           image: urlMap[addon.image] || ''
-//         }))
-//       }));
-
-//       setProductData(processedData);
-//     } catch (error) {
-//       console.error('Error fetching products data:', error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   useEffect(() => {
-//     Promise.all([fetchRoomData(), fetchProductsData()]);
-//   }, []);
-
-//   const handleSearch = (event) => {
-//     setSearchQuery(event.target.value.toLowerCase());
-//   };
-
-//   const handleSliderChange = (event, newValue) => {
-//     setPriceRange(newValue);
-//   };
-
-//   const filteredProducts = useMemo(() => {
-//     return productsData.filter((product) => {
-//       const matchesSearch = product.title.toLowerCase().includes(searchQuery) ||
-//                             product.details.toLowerCase().includes(searchQuery);
-//       const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-//       return matchesSearch && matchesPrice;
-//     });
-//   }, [productsData, searchQuery, priceRange]);
-
-//   return (
-//     <div className="App">
-//       <div className="search-filter">
-//         {loading ? (
-//           <>
-//             <Skeleton variant="rectangular" height={40} width="80%" className="skeleton-bar" />
-//             <Skeleton variant="rectangular" height={40} width="80%" className="skeleton-slider" />
-//           </>
-//         ) : (
-//           <>
-//             <input
-//               type="text"
-//               placeholder="Search products..."
-//               value={searchQuery}
-//               onChange={handleSearch}
-//               className="search-bar"
-//             />
-//             <Slider
-//               value={priceRange}
-//               onChange={handleSliderChange}
-//               valueLabelDisplay="auto"
-//               min={1000}
-//               max={12000}
-//               className="price-slider"
-//             />
-//           </>
-//         )}
-//       </div>
-
-//       <div className="products-grid">
-//         {loading ? (
-//           Array.from({ length: 4 }).map((_, index) => (
-//             <div key={index} className="card-skeleton-container">
-// <Skeleton variant="rectangular" height={150} width="100%" className="skeleton-card-image" />
-// <Skeleton variant="text" width="60%" height={20} style={{ margin: '10px 0' }} />
-// <Skeleton variant="text" width="80%" height={20} style={{ margin: '5px 0' }} />
-// <Skeleton variant="text" width="50%" height={20} style={{ margin: '5px 0' }} />
-//             </div>
-//           ))
-//         ) : (
-//           categories.map((category) => {
-//             const categoryProducts = filteredProducts.filter(product => product.category === category);
-//             if (categoryProducts.length === 0) return null;
-
-//             return (
-//               <div key={category} className="category-section">
-//                 <h2>{category}</h2>
-//                 {categoryProducts.map((product) => (
-//                   <div key={product.id}>
-//                     <Card
-//                       title={product.title}
-//                       price={product.price}
-//                       details={product.details}
-//                       addOns={product.addons}
-//                       image={product.image}
-//                       initialMinimized={product.initialMinimized}
-//                       // roomData={roomNumbers[0]}
-//                     />
-//                   </div>
-//                 ))}
-//               </div>
-//             );
-//           })
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default App; 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Slider, Skeleton, Select, MenuItem, Button } from '@mui/material';
 import { supabase } from './supabase';
@@ -285,7 +5,7 @@ import RoomDataBox from './RoomDataBox';
 import './boq.css';
 // import Cart from './Cart';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 import fs from "file-saver";
 // import { MdExpandMore, MdExpandLess } from 'react-icons/md';
@@ -301,13 +21,15 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       label: variant.title || 'Default',
       title: variant.title,
       details: variant.details,
-      price: variant.price
+      price: variant.price,
+      id: variant.id,
     }));
 
   const [selectedImage, setSelectedImage] = useState(colorOptions.find(option => option.src)?.src || null);
   const [selectedTitle, setSelectedTitle] = useState(product_variants[0]?.title || null);
   const [selectedDetails, setSelectedDetails] = useState(product_variants[0]?.details || null);
   const [selectedPrice, setSelectedPrice] = useState(product_variants[0]?.price || 0);
+  const [selectedId, setSelectedId] = useState(product_variants[0]?.id || 0);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const basePrice = selectedPrice;  //price
@@ -339,27 +61,19 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     });
   };
 
-
   const calculateTotalPrice = useMemo(() => {
     const totalAddOnPrice = Object.values(selectedAddOns).reduce(
-      (total, addOn) => total + (addOn.addon_price || 0), // Access `addon_price` explicitly, default to 0 if not present
+      (total, addOn) => total + (addOn.addon_price || 0),
       0
     );
-
     const normalizedSubCat = subCat.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const matchedKey = Object.keys(data).find((key) =>
+      normalizedSubCat.includes(key.toLowerCase())
+    );
+    const quantity = matchedKey ? data[matchedKey] : 1;
+    return (quantity || 0) * (selectedPrice + totalAddOnPrice);
+  }, [selectedAddOns, selectedPrice, data]);
 
-    // Iterate over the data keys and check if any match normalizedSubCat
-    const matchedKey = Object.keys(data).find(key => normalizedSubCat.includes(key.toLowerCase()));
-    var quantity;
-    if (matchedKey) {
-      quantity = data[matchedKey];
-    }
-
-    // Calculation for 'linear' using basePrice and addOn
-    const linearTotal = (quantity || 0) * (basePrice + totalAddOnPrice);
-    // console.log('bp: '+basePrice+ 'quantity: '+ quantity + 'total: ' +totalAddOnPrice+ 'lTotal: ' + linearTotal);
-    return linearTotal;
-  }, [selectedAddOns, basePrice, data]);
 
   const toggleMinimize = () => {
     setIsMinimized((prev) => !prev);
@@ -372,10 +86,63 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
 
   // useEffect(() => {
   //   updateBOQTotal(calculateTotalPrice);
-  // }, [calculateTotalPrice]);
+  // }, [calculateTotalPrice]); 
+
+  useEffect(() => {
+    if (product && product_variants.length > 0) {
+      // Preselect data when the component mounts or product changes
+      preselectData(product.id);
+    }
+  }, [product, selectedData]); // Run this effect whenever `product` or `selectedData` changes
+
   const [selectedProductId, setSelectedProductId] = useState(null); // Dynamic selection
 
+  const preselectData = (productID) => {
+    const existingProduct = selectedData.find((item) => item.id === productID);
+
+    if (existingProduct) {
+      const variant = product_variants.find(
+        (v) => v.title === existingProduct.product_variant.variant_title
+      );
+
+      if (variant) {
+        setSelectedImage(variant.image);
+        setSelectedTitle(variant.title);
+        setSelectedDetails(variant.details);
+        setSelectedPrice(variant.price);
+        setSelectedId(variant.id);
+      }
+
+      setSelectedAddOns(
+        Object.keys(existingProduct.addons).reduce((acc, title) => {
+          const addon = existingProduct.addons[title];
+          if (addon) {
+            acc[title] = {
+              addon_title: addon.addon_title || "No Title",
+              addon_price: addon.addon_price || 0,
+              addon_image: addon.addon_image || "No Image",
+            };
+          }
+          return acc;
+        }, {})
+      );
+    } else {
+      // Default selection
+      const defaultVariant = product_variants[0];
+      if (defaultVariant) {
+        setSelectedImage(defaultVariant.image);
+        setSelectedTitle(defaultVariant.title);
+        setSelectedDetails(defaultVariant.details);
+        setSelectedPrice(defaultVariant.price);
+        setSelectedId(defaultVariant.id);
+      }
+      setSelectedAddOns({});
+      console.log("No matching product found. Default selected.");
+    }
+  };
+
   const handleStartClick = (subCat, productID) => {
+    // clearSelectedData();
     const priceValue = Number(price[subCat]); // Ensure it's a number
     const totalPrice = Number(calculateTotalPrice); // Ensure it's a number
 
@@ -386,10 +153,9 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     }
     toggleMinimize();
     setSelectedProductId(productID);
+    preselectData(productID);
     console.log(productID)
   };
-  // console.log("selected product id", selectedProductId);
-  // console.log("products data", productsData)
 
   const handelSelectedData = () => {
     if (!product || product.id !== selectedProductId) {
@@ -405,9 +171,10 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         variant_title: selectedTitle,
         variant_iamge: selectedImage,
         variant_details: selectedDetails,
-        variant_price: selectedPrice
+        variant_price: selectedPrice,
+        variant_id: selectedId,
       },
-      addons:selectedAddOns,
+      addons: selectedAddOns,
     };
 
     // Update selectedData state
@@ -434,16 +201,17 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       return updatedData;
     });
   };
+
   const clearSelectedData = () => {
     localStorage.removeItem('selectedData');
   };
 
   console.log("selected data", selectedData)
   // console.log("product",product)
+
   if (!isMinimized) {
     return (
       <>
-
         <div key={product.id} className="minimized-card mb-5">
           <div className='flex justify-between'>
             <div className="info">
@@ -464,7 +232,6 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
             </button>
           </div>
         </div>
-
       </>
     );
   }
@@ -500,6 +267,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     handelSelectedData();
     // clearSelectedData();
   };
+
   return (
     <div className="card-container">
       <CardSection className="card-image">
@@ -551,7 +319,9 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
                   .filter((variant) => variant.addonid === addOn.id) // Check if variant belongs to the current addOn
                   .map((variant, index) => (
                     <li key={variant.id || index} className='addon-variant flex flex-row'>
-                      <input type="checkbox" id={`addon-${variant.id || index}`} onChange={(e) => handleAddOnChange(variant, e.target.checked, addOn.title)} />
+                      <input type="checkbox" id={`addon-${variant.id || index}`}
+                        checked={!!selectedAddOns[variant.title]}
+                        onChange={(e) => handleAddOnChange(variant, e.target.checked, addOn.title)} />
                       <label htmlFor={`addon-${variant.id || index}`}>{variant.title} (+₹{variant.price})</label>
                       <img
                         src={variant.image}
@@ -822,6 +592,7 @@ const App = () => {
       return updatedPrices; // Ensure the new state is returned
     });
   };
+
   const fetchImageAsBase64 = async (url) => {
     try {
       const response = await fetch(url);
@@ -837,19 +608,19 @@ const App = () => {
       return null;
     }
   };
-  
+
 
   const handleDownloadExcel = async () => {
     const data = JSON.parse(localStorage.getItem("selectedData")) || [];
-  
+
     if (data.length === 0) {
       console.error("No data to export");
       return;
     }
-  
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Selected Products");
-  
+
     worksheet.columns = [
       { header: "ID", key: "id", width: 20 },
       { header: "Category", key: "category", width: 20 },
@@ -863,7 +634,7 @@ const App = () => {
       { header: "Addon Price", key: "addon_price", width: 15 },
       { header: "Addon Image", key: "addon_image", width: 30 },
     ];
-  
+
     for (const item of data) {
       const row = worksheet.addRow({
         id: item.id,
@@ -878,7 +649,7 @@ const App = () => {
         addon_price: Object.values(item.addons || {}).map((a) => a.addon_price).join(", "),
         addon_image: "",
       });
-  
+
       // Fetch and insert the variant image
       if (item.product_variant?.variant_iamge) {
         const variantBase64 = await fetchImageAsBase64(item.product_variant.variant_iamge);
@@ -890,12 +661,12 @@ const App = () => {
           worksheet.addImage(variantImageId, `F${row.number}:F${row.number}`);
         }
       }
-  
+
       // Fetch and insert add-on images
       if (item.addons) {
         const cellRef = `K${row.number}`;
         let addOnImages = [];
-  
+
         for (const addon of Object.values(item.addons)) {
           if (addon.addon_image) {
             try {
@@ -905,7 +676,7 @@ const App = () => {
                   base64: addonBase64,
                   extension: "png",
                 });
-  
+
                 // Save image ID for stacking later
                 addOnImages.push(addonImageId);
               }
@@ -914,7 +685,7 @@ const App = () => {
             }
           }
         }
-  
+
         // Stack multiple images in the same cell
         addOnImages.forEach((imageId, idx) => {
           worksheet.addImage(imageId, {
@@ -924,15 +695,72 @@ const App = () => {
         });
       }
     }
-  
+
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     fs.saveAs(blob, "SelectedData_with_Images.xlsx");
   };
-  
-  
-  
-  
+
+  // Normalize function for consistent comparison
+  const normalizeKey = (key) => {
+    return (key || "").toLowerCase().replace(/[^a-z0-9]/g, '');
+  };
+
+  const calculateTotalPriceBySubcategory = (data, roomNumbers) => {
+    if (!data || !Array.isArray(data) || !roomNumbers || !roomNumbers[0]) return {};
+
+    // Extract the first object from roomNumbers (since it's an array with a single object)
+    const roomNumbersMap = roomNumbers[0];
+
+    console.log("Room Numbers Map:", roomNumbersMap);
+
+    return data.reduce((acc, item) => {
+      const subcategory = item?.subcategory || "Unknown";
+      const normalizedSubCat = normalizeKey(subcategory); // Normalize the subcategory name
+
+      console.log(`Normalized Subcategory: ${normalizedSubCat}`);
+      console.log("Room Numbers Map:", roomNumbersMap);
+
+      // Match keys using partial comparison
+      const matchedKey = Object.keys(roomNumbersMap).find((key) =>
+        normalizedSubCat.includes(normalizeKey(key))
+      );
+
+      console.log(`Matched Key: ${matchedKey}`);
+
+      // Get quantity from roomNumbersMap, default to 1 if no match
+      const quantity = matchedKey ? roomNumbersMap[matchedKey] : 1;
+      console.log(`Final Quantity for ${subcategory}: ${quantity}`);
+
+      const variantPrice = item?.product_variant?.variant_price || 0;
+
+      // Addon price calculation (access price for each addon in the object)
+      const addonPrice = Object.values(item?.addons || {}).reduce((sum, addon) => {
+        const addonPrice = addon?.addon_price || 0; // Assuming each addon has a `price` key
+        return sum + addonPrice;
+      }, 0);
+
+      if (!acc[subcategory]) {
+        acc[subcategory] = 0;
+      }
+
+      // Multiply total price by quantity
+      acc[subcategory] += (variantPrice + addonPrice) * quantity;
+
+      return acc;
+    }, {});
+  };
+
+  // Update price state whenever selectedData or roomNumbers change
+  useEffect(() => {
+    if (selectedData && selectedData.length > 0) {
+      const calculatedPrice = calculateTotalPriceBySubcategory(selectedData, roomNumbers);
+      setPrice(calculatedPrice);
+    } else {
+      setPrice({});
+    }
+  }, [selectedData, roomNumbers]);
+
   return (
     <div className="App">
       <div className="search-filter">
