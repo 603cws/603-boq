@@ -1,0 +1,78 @@
+/* Modal overlay to cover the background */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Modal content box */
+  .modal-content {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    width: 70dvw;
+    height: 70dvh;
+    /* max-width: 600px; */
+    position: relative;
+  }
+  .modal-product-details{
+    max-width: 100%;
+    max-height: 100%;
+  }
+  /* Close button */
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  .modal-variant-img{
+    height: 40%;
+    width: 50%;
+    object-fit: contain;
+  }
+  .variant-sides-img{
+    width: 10%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .variant-sides-img img{
+    height: auto;
+    max-width: 100%;
+    cursor: pointer;
+    border: 2px solid gray;
+    /* border-radius: 50%; */
+  }
+  .variant-thumbnail {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-bottom: 10px;
+    border: 2px solid transparent;
+    transition: border 0.3s ease;
+  }
+  
+  .variant-thumbnail:hover {
+    border: 2px solid #4caf50; /* Green border on hover */
+  }
+  
+  .highlighted-thumbnail {
+    border: 2px solid #2196f3 !important; /* Blue border for the active (main) image */
+    scale: 1.2;
+  }
+  
+  .addons-container{
+    width: 30%;
+  }
+  

@@ -6,14 +6,19 @@ import './boq.css';
 // import Cart from './Cart';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 // import * as XLSX from "xlsx";
-import ExcelJS from "exceljs";
-import fs from "file-saver";
+// import ExcelJS from "exceljs";
+// import fs from "file-saver";
+// import jsPDF from "jspdf";
+// import autoTable from "jspdf-autotable";
+import './Modal'
+import Modal from './Modal';
 // import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 
 const Card = ({ title, price, image, details, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone, addon_variants = [], setPrice, selectedData, setSelectedData, product }) => {
   const [isMinimized, setIsMinimized] = useState(initialMinimized);
   const [selectedAddOns, setSelectedAddOns] = useState({});
-
+  const [showModal, setShowModal] = useState(false);
+  
   const colorOptions = product_variants
     .filter(variant => variant.image)  // Filter out variants with null or undefined images
     .map(variant => ({
@@ -23,9 +28,11 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
       details: variant.details,
       price: variant.price,
       id: variant.id,
+      images : variant.additional_images || [],
     }));
 
   const [selectedImage, setSelectedImage] = useState(colorOptions.find(option => option.src)?.src || null);
+  const [additionalImages, setAdditionalImages] = useState(colorOptions.find(option => option.images)?.images || []);
   const [selectedTitle, setSelectedTitle] = useState(product_variants[0]?.title || null);
   const [selectedDetails, setSelectedDetails] = useState(product_variants[0]?.details || null);
   const [selectedPrice, setSelectedPrice] = useState(product_variants[0]?.price || 0);
@@ -33,6 +40,19 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const basePrice = selectedPrice;  //price
+
+console.log("variant data",colorOptions);
+
+  useEffect(()=>{
+    if(showModal){
+      document.body.style.overflow='hidden'
+    }else{
+      document.body.style.overflow='auto'
+    }
+    return () => {
+      document.body.style.overflow = 'auto'; // Ensure scrolling is restored
+    };
+  },[showModal])
 
   const handleImageLoad = () => {
     setIsImageLoaded(true);
@@ -111,6 +131,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         setSelectedDetails(variant.details);
         setSelectedPrice(variant.price);
         setSelectedId(variant.id);
+        setAdditionalImages(variant.additional_images)
       }
 
       setSelectedAddOns(
@@ -135,6 +156,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         setSelectedDetails(defaultVariant.details);
         setSelectedPrice(defaultVariant.price);
         setSelectedId(defaultVariant.id);
+        setAdditionalImages(defaultVariant.additional_images)
       }
       setSelectedAddOns({});
       console.log("No matching product found. Default selected.");
@@ -173,6 +195,7 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
         variant_details: selectedDetails,
         variant_price: selectedPrice,
         variant_id: selectedId,
+        additional_images: additionalImages,
       },
       addons: selectedAddOns,
     };
@@ -250,13 +273,14 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
   //   toggleMinimize();
   // };
 
-  const handleImageClick = (imageSrc, title, details, price) => {
+  const handleImageClick = (imageSrc, title, details, price,images) => {
     if (imageSrc !== selectedImage) {
       setSelectedImage(imageSrc); // Only update the selected image if it's different
       setSelectedTitle(title); // Update the selected title
       setSelectedDetails(details);
       setSelectedPrice(price);
       setIsImageLoaded(false); // Reset image load state to trigger fade-in for the new image
+      setAdditionalImages(images)
     }
   };
 
@@ -265,13 +289,16 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
     setPrice(subCat, calculateTotalPrice);
     toggleMinimize();
     handelSelectedData();
+    setShowModal(false);
     // clearSelectedData();
   };
-
+  const handleExpandVariant = () => {
+    setShowModal(true);
+  };
   return (
     <div className="card-container">
       <CardSection className="card-image">
-        <img src={selectedImage} alt={selectedTitle} className={`image ${isImageLoaded ? 'loaded' : ''}`} onLoad={handleImageLoad} />
+        <img src={selectedImage} alt={selectedTitle} className={`image ${isImageLoaded ? 'loaded' : ''} cursor-pointer`} onLoad={handleImageLoad} onClick={handleExpandVariant} />
 
         <div className="color-options">
           {colorOptions.filter(option => option.src).map((option, index) => (
@@ -280,11 +307,26 @@ const Card = ({ title, price, image, details, product_variants = [], addOns, ini
               src={option.src}
               alt={option.label}
               className="color-thumbnail"
-              onClick={() => handleImageClick(option.src, option.title, option.details, option.price)}
+              onClick={() => handleImageClick(option.src, option.title, option.details, option.price,option.images)}
             />
           ))}
         </div>
       </CardSection>
+      {showModal && (
+          <Modal 
+          showModal={showModal}
+          selectedTitle={selectedTitle}
+          selectedImage={selectedImage}
+          additionalImages={additionalImages}
+          selectedDetails={selectedDetails}
+          selectedPrice={selectedPrice}
+          addOns={addOns}
+          selectedAddOns={selectedAddOns}
+          handleAddOnChange={handleAddOnChange}
+          calculateTotalPrice={calculateTotalPrice}
+          handleDoneClick={handleDoneClick}
+          onClose={() => setShowModal(false)}/>
+        )}
 
       <CardSection className="card-features">
         <h3>{selectedTitle}</h3>
@@ -478,7 +520,7 @@ const App = () => {
           }))
         }))
       }));
-
+      console.log("all images", allImages)
       setProductData(processedData);
     } catch (error) {
       console.error('Error fetching products data:', error);
@@ -593,113 +635,221 @@ const App = () => {
     });
   };
 
-  const fetchImageAsBase64 = async (url) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result.split(",")[1]); // Remove the `data:image/...;base64,` prefix
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error("Failed to fetch image from URL:", url, error);
-      return null;
-    }
-  };
+
+   // Helper function to fetch an image as Base64
+//    async function fetchImageAsBase64(url) {
+//     try {
+//         console.log("Fetching image URL:", url);
+//         const response = await fetch(url, { mode: "cors" });
+
+//         if (!response.ok) {
+//             console.error("Failed to fetch image:", response.status, response.statusText);
+//             return null;
+//         }
+
+//         const blob = await response.blob();
+//         console.log("Fetched blob:", blob);
+
+//         const contentType = response.headers.get("Content-Type");
+//         const imageType = contentType === "image/png"
+//             ? "PNG"
+//             : contentType === "image/jpeg"
+//             ? "JPEG"
+//             : null;
+
+//         if (!imageType) {
+//             console.error("Unsupported image type:", contentType);
+//             return null;
+//         }
+
+//         return new Promise((resolve, reject) => {
+//             const reader = new FileReader();
+//             reader.onloadend = () => {
+//                 const base64Image = reader.result; // Use full Base64 string
+//                 resolve({ base64Image, imageType });
+//             };
+//             reader.onerror = (error) => {
+//                 console.error("Failed to convert image to Base64:", url, error);
+//                 reject(error);
+//             };
+//             reader.readAsDataURL(blob);
+//         });
+//     } catch (error) {
+//         console.error("Error fetching image URL:", url, error);
+//         return null;
+//     }
+// }
 
 
-  const handleDownloadExcel = async () => {
-    const data = JSON.parse(localStorage.getItem("selectedData")) || [];
+    
 
-    if (data.length === 0) {
-      console.error("No data to export");
-      return;
-    }
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Selected Products");
+// const handleDownloadPDF = async () => {
+//   const data = JSON.parse(localStorage.getItem("selectedData")) || [];
 
-    worksheet.columns = [
-      { header: "ID", key: "id", width: 20 },
-      { header: "Category", key: "category", width: 20 },
-      { header: "Subcategory", key: "subcategory", width: 20 },
-      { header: "SubSubcategory", key: "subsubcategory", width: 20 },
-      { header: "Variant Title", key: "variant_title", width: 25 },
-      { header: "Variant Image", key: "variant_image", width: 20 },
-      { header: "Variant Details", key: "variant_details", width: 30 },
-      { header: "Variant Price", key: "variant_price", width: 15 },
-      { header: "Addon Title", key: "addon_title", width: 25 },
-      { header: "Addon Price", key: "addon_price", width: 15 },
-      { header: "Addon Image", key: "addon_image", width: 30 },
-    ];
+//   if (data.length === 0) {
+//     console.error("No data to export");
+//     return;
+//   }
 
-    for (const item of data) {
-      const row = worksheet.addRow({
-        id: item.id,
-        category: item.category,
-        subcategory: item.subcategory,
-        subsubcategory: item.subcategory1,
-        variant_title: item.product_variant?.variant_title || "No Title",
-        variant_image: "",
-        variant_details: item.product_variant?.variant_details || "No Details",
-        variant_price: item.product_variant?.variant_price || "No Price",
-        addon_title: Object.values(item.addons || {}).map((a) => a.addon_title).join(", "),
-        addon_price: Object.values(item.addons || {}).map((a) => a.addon_price).join(", "),
-        addon_image: "",
-      });
+//   const fetchAllImages = async (item) => {
+//     const fetchImages = async (urls) => {
+//       return Promise.all(
+//         urls.map(async (path) => {
+//           const publicUrl = `https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/${path}`;
 
-      // Fetch and insert the variant image
-      if (item.product_variant?.variant_iamge) {
-        const variantBase64 = await fetchImageAsBase64(item.product_variant.variant_iamge);
-        if (variantBase64) {
-          const variantImageId = workbook.addImage({
-            base64: variantBase64,
-            extension: "png",
-          });
-          worksheet.addImage(variantImageId, `F${row.number}:F${row.number}`);
-        }
-      }
+//           const base64Data = await fetchImageAsBase64(path);
+//           if (!base64Data) {
+//             console.warn(`Skipping image for path: ${path}`);
+//             return { base64Image: null, imageType: null };
+//           }
+//           return base64Data;
+//         })
+//       );
+//     };
 
-      // Fetch and insert add-on images
-      if (item.addons) {
-        const cellRef = `K${row.number}`;
-        let addOnImages = [];
+//     // Generate direct public URL for Variant Image
+//     if (item.product_variant?.variant_image) {
+//       const publicUrl = `https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/${item.product_variant.variant_image}`;
+//       const base64Data = await fetchImageAsBase64(item.product_variant.variant_image);
+//       item.product_variant.variantBase64Image = base64Data || { base64Image: null, imageType: null };
+//     }
 
-        for (const addon of Object.values(item.addons)) {
-          if (addon.addon_image) {
-            try {
-              const addonBase64 = await fetchImageAsBase64(addon.addon_image);
-              if (addonBase64) {
-                const addonImageId = workbook.addImage({
-                  base64: addonBase64,
-                  extension: "png",
-                });
+//     // Generate direct public URLs for Addon Images
+//     if (item.addons) {
+//       const addonImages = Object.values(item.addons)
+//         .filter((addon) => addon.addon_image)
+//         .map((addon) => addon.addon_image);
 
-                // Save image ID for stacking later
-                addOnImages.push(addonImageId);
-              }
-            } catch (error) {
-              console.error("Failed to fetch add-on image:", addon.addon_image, error);
-            }
-          }
-        }
+//       const addonBase64Images = await fetchImages(addonImages);
+//       item.addonsBase64Images = addonBase64Images.filter((img) => img.base64Image);
+//     }
+//   };
 
-        // Stack multiple images in the same cell
-        addOnImages.forEach((imageId, idx) => {
-          worksheet.addImage(imageId, {
-            tl: { col: 10, row: row.number - 1 + idx * 0.2 }, // Adjust vertical positioning
-            ext: { width: 50, height: 50 },
-          });
-        });
-      }
-    }
+//   for (const item of data) {
+//     await fetchAllImages(item);
+//   }
 
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    fs.saveAs(blob, "SelectedData_with_Images.xlsx");
-  };
+//   const pageWidth = 500;
+//   const pageHeight = 210;
+//   const doc = new jsPDF("landscape", "mm", [pageWidth, pageHeight]);
+
+//   let BOQTotal = 0;
+
+//   doc.setFontSize(18);
+//   doc.text("Selected Products Report", pageWidth / 2, 15, { align: "center" });
+
+//   const tableHeaders = [
+//     "ID",
+//     "Category",
+//     "Subcategory",
+//     "SubSubcategory",
+//     "Variant Title",
+//     "Variant Details",
+//     "Variant Price",
+//     "Variant Image",
+//     "Addon Title",
+//     "Addon Price",
+//     "Addon Image",
+//   ];
+
+//   const tableBody = [];
+//   for (const item of data) {
+//     const variantPrice = parseFloat(item.product_variant?.variant_price) || 0;
+//     const addonPrice = Object.values(item.addons || {}).reduce((acc, addon) => {
+//       return acc + (parseFloat(addon.addon_price) || 0);
+//     }, 0);
+
+//     BOQTotal += variantPrice + addonPrice;
+//     console.log(item.addonsBase64Images);
+//     tableBody.push([
+//       item.id,
+//       item.category,
+//       item.subcategory,
+//       item.subcategory1,
+//       item.product_variant?.variant_title || "No Title",
+//       item.product_variant?.variant_details || "No Details",
+//       variantPrice.toFixed(2),
+//       { imageBase64: item.product_variant?.variantBase64Image  || "N/A" },
+//       Object.values(item.addons || {}).map((a) => a.addon_title).join(", "),
+//       addonPrice.toFixed(2),
+//       { imageBase64s: item.addonsBase64Images || "N/A" },
+//     ]);
+//   }
+
+//   tableBody.push([
+//     "",
+//     "",
+//     "",
+//     "",
+//     "",
+//     "Total BOQ Cost",
+//     BOQTotal.toFixed(2),
+//     "",
+//     "",
+//     "",
+//     "",
+//   ]);
+
+//   console.log("Table Body:", tableBody);
+
+//   doc.autoTable({
+//     head: [tableHeaders],
+//     body: tableBody,
+//     startY: 25,
+//     tableWidth: "wrap",
+//     headStyles: { fillColor: [29, 140, 248] },
+//     bodyStyles: { valign: "middle", halign: "center", fontSize: 8 },
+//     columnStyles: {
+//       0: { cellWidth: 40 },
+//       1: { cellWidth: 30 },
+//       2: { cellWidth: 30 },
+//       3: { cellWidth: 35 },
+//       4: { cellWidth: 35 },
+//       5: { cellWidth: 50 },
+//       6: { cellWidth: 20 },
+//       7: { cellWidth: 30 }, // Variant Image
+//       8: { cellWidth: 40 },
+//       9: { cellWidth: 20 },
+//       10: { cellWidth: 40 }, // Addon Image
+//     },
+//     didDrawCell: (data) => {
+//       // Handle Variant Image
+//       if (data.column.index === 7 && data.cell.raw?.imageBase64s) {
+//         const { base64Image, imageType } = data.cell.raw.imageBase64s;
+//         if (base64Image && imageType) {
+//           const x = data.cell.x + 2;
+//           const y = data.cell.y + 2;
+//           doc.addImage(base64Image, imageType, x, y, 15, 15); // Add image (adjust dimensions if needed)
+//           console.log("Base64 data for images:", base64Image, imageType);
+//         }
+//       }
+
+//       // Handle Addon Images
+//       if (data.column.index === 10 && data.cell.raw?.imageBase64s) {
+//         const imageBase64s = data.cell.raw.imageBase64s;
+//         let x = data.cell.x + 2;
+//         let y = data.cell.y + 2;
+
+//         for (const { base64Image, imageType } of imageBase64s) {
+//           if (base64Image && imageType) {
+//             doc.addImage(base64Image, imageType, x, y, 15, 15); // Add each image
+//             x += 20; // Adjust position for the next image in the same cell
+//             if (x > data.cell.x + data.cell.width - 10) {
+//               x = data.cell.x + 2; // Reset x position
+//               y += 22; // Move down for the next row of images
+//             }
+//             // console.log("Base64 data for images:", base64Image, imageType);
+//           }
+//         }
+//       }
+//     },
+//   });
+
+//   doc.save("SelectedProductsScrollableReport.pdf");
+// };
+  
+  
 
   // Normalize function for consistent comparison
   const normalizeKey = (key) => {
@@ -712,25 +862,24 @@ const App = () => {
     // Extract the first object from roomNumbers (since it's an array with a single object)
     const roomNumbersMap = roomNumbers[0];
 
-    console.log("Room Numbers Map:", roomNumbersMap);
+    
 
     return data.reduce((acc, item) => {
       const subcategory = item?.subcategory || "Unknown";
       const normalizedSubCat = normalizeKey(subcategory); // Normalize the subcategory name
 
-      console.log(`Normalized Subcategory: ${normalizedSubCat}`);
-      console.log("Room Numbers Map:", roomNumbersMap);
+      
 
       // Match keys using partial comparison
       const matchedKey = Object.keys(roomNumbersMap).find((key) =>
         normalizedSubCat.includes(normalizeKey(key))
       );
 
-      console.log(`Matched Key: ${matchedKey}`);
+     
 
       // Get quantity from roomNumbersMap, default to 1 if no match
       const quantity = matchedKey ? roomNumbersMap[matchedKey] : 1;
-      console.log(`Final Quantity for ${subcategory}: ${quantity}`);
+      
 
       const variantPrice = item?.product_variant?.variant_price || 0;
 
@@ -925,7 +1074,7 @@ const App = () => {
         </h4>
       </div>
       <div className='flex'>
-        <button onClick={handleDownloadExcel} className='bg-blue-500 text-white font-semibold px-5 py-1.5 rounded-sm mb-2 hover:bg-green-500 m-auto'>Download BOQ</button>
+        <button /*onClick={handleDownloadPDF}*/ className='bg-blue-500 text-white font-semibold px-5 py-1.5 rounded-sm mb-2 hover:bg-green-500 m-auto'>Download BOQ</button>
       </div>
     </div>
   );
