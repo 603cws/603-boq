@@ -3,13 +3,12 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
-export default function Cart({open, setOpen, cartItems}) {
+export default function Cart({ open, setOpen, cartItems }) {
 
-    const grandTotal = cartItems.reduce(
-        (total, item) => total + item.price + (item.addOnsCost || 0),
-        0
-      );
-      
+  const grandTotal = cartItems.reduce(
+    (total, item) => total + item.price + (item.addOnsCost || 0),
+    0
+  );
 
   return (
     <Dialog open={open} onClose={setOpen} className="relative z-10">
@@ -43,7 +42,7 @@ export default function Cart({open, setOpen, cartItems}) {
                   <DialogTitle className="text-base font-semibold text-gray-900">Summary</DialogTitle>
                 </div>
                 <div className="relative mt-6 flex-1 px-4 sm:px-6">{/* Your content */}
-                {cartItems.length === 0 ? (
+                  {cartItems.length === 0 ? (
                     <p className="text-center text-gray-500">No items in the cart.</p>
                   ) : (
                     <ul>
@@ -52,15 +51,15 @@ export default function Cart({open, setOpen, cartItems}) {
                           <h4 className="font-semibold">{item.title}</h4>
                           <p>Price: ₹{item.price}</p>
                           <p>Add-Ons: {item.addOns.join(', ') || 'None'}</p>
-                          <hr/>
+                          <hr />
                         </li>
                       ))}
                     </ul>
                   )}
                 </div>
                 <div className='flex justify-between px-5 sticky'>
-                    <h3>Grand Total: ₹{grandTotal}</h3>
-                    <button className='bg-green-500 text-white font-semibold px-5 py-1.5 rounded-xl mb-2 hover:bg-blue-500'>Download BOQ</button>
+                  <h3>Grand Total: ₹{grandTotal}</h3>
+                  <button className='bg-green-500 text-white font-semibold px-5 py-1.5 rounded-xl mb-2 hover:bg-blue-500'>Download BOQ</button>
                 </div>
               </div>
             </DialogPanel>

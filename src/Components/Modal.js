@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../src/Modal.css";
+import "./Modal.css";
 
 const Modal = ({
   children,
@@ -23,7 +23,6 @@ const Modal = ({
     setHoveredImage(selectedImage); // Ensure hoveredImage matches the main image initially
   }, [selectedImage]);
 
-
   const additional_Images = (() => {
     try {
       return additionalImages && additionalImages !== "" ? JSON.parse(additionalImages) : [];
@@ -32,8 +31,6 @@ const Modal = ({
       return [];
     }
   })();
-
-
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -44,8 +41,9 @@ const Modal = ({
         <div className="modal-product-details flex justify-between gap-5">
           <div className="variant-sides-img">
             <img src={selectedImage}
-            className={`${hoveredImage === selectedImage ? "highlighted-thumbnail" : ""}`}
-            onMouseEnter={() => setHoveredImage(selectedImage)}
+              alt={selectedTitle}
+              className={`${hoveredImage === selectedImage ? "highlighted-thumbnail" : ""}`}
+              onMouseEnter={() => setHoveredImage(selectedImage)}
             />
             {Array.isArray(additional_Images) && additional_Images.length > 0 ? (
               additional_Images.map((image, index) => {
@@ -105,11 +103,7 @@ const Modal = ({
               </div>
             ))}
           </div>
-
-
-
         </div>
-
       </div>
     </div>
   );
