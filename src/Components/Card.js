@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Modal from './Modal';
+import './Card.css'
 
 
 const Card = ({ price, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone,
-    addon_variants = [], setPrice, selectedData, setSelectedData, product }) => {
+    addon_variants = [], setPrice, selectedData, setSelectedData, product, category,totalBOQCost }) => {
 
     const [isMinimized, setIsMinimized] = useState(initialMinimized);
     const [selectedAddOns, setSelectedAddOns] = useState({});
-    const [showModal, setShowModal] = useState(false);
+    const [showModal, setShowModal] = useState(false)
 
     const colorOptions = product_variants
         .filter(variant => variant.image)  // Filter out variants with null or undefined images
@@ -31,7 +32,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
 
     const basePrice = selectedPrice;  //price
 
-    console.log("variant data", colorOptions);
+    // console.log("variant data", colorOptions);
 
     useEffect(() => {
         if (showModal) {
@@ -48,7 +49,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
         setIsImageLoaded(true);
     };
 
-    const handleAddOnChange = (variant, isChecked, addOn) => {
+    const handleAddOnChange = (variant, isChecked) => {
         // Ensure the variant object has title, price, and image
         if (!variant || !variant.title || variant.price == null || !variant.image) return;
 
@@ -190,7 +191,6 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
             },
             addons: selectedAddOns,
         };
-
         // Update selectedData state
         setSelectedData((prevData) => {
             // Find if the product already exists by product.id
@@ -211,7 +211,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
 
             // Save updated data to localStorage
             localStorage.setItem("selectedData", JSON.stringify(updatedData));
-
+            localStorage.setItem("totalBOQCost", JSON.stringify(totalBOQCost));
             return updatedData;
         });
     };
@@ -220,7 +220,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
         localStorage.removeItem('selectedData');
     };
 
-    console.log("selected data", selectedData)
+    // console.log("selected data", selectedData)
     // console.log("product",product)
 
     if (!isMinimized) {
@@ -306,17 +306,19 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
             {showModal && (
                 <Modal
                     showModal={showModal}
-                    selectedTitle={selectedTitle}
-                    selectedImage={selectedImage}
+                    selectedTitle={selectedTitle}//
+                    selectedImage={selectedImage}//
                     additionalImages={additionalImages}
-                    selectedDetails={selectedDetails}
-                    selectedPrice={selectedPrice}
+                    selectedDetails={selectedDetails}//
+                    selectedPrice={selectedPrice}//
                     addOns={addOns}
-                    selectedAddOns={selectedAddOns}
+                    selectedAddOns={selectedAddOns}//
                     handleAddOnChange={handleAddOnChange}
                     calculateTotalPrice={calculateTotalPrice}
                     handleDoneClick={handleDoneClick}
-                    onClose={() => setShowModal(false)} />
+                    category={category}
+                    onClose={() => setShowModal(false)} 
+                    />
             )}
 
             <CardSection className="card-features">

@@ -18,9 +18,14 @@
     border-radius: 8px;
     padding: 20px;
     width: 70dvw;
-    height: 70dvh;
+    height: 60dvh;
     /* max-width: 600px; */
     position: relative;
+    overflow-y: auto !important;
+  }
+  .question-modal{
+    height: 40dvh;
+    width: 50dvw;
   }
   .modal-product-details{
     max-width: 100%;
@@ -37,30 +42,26 @@
     cursor: pointer;
   }
   .modal-variant-img{
-    height: 40%;
+    height: 250px;
     width: 50%;
     object-fit: contain;
+    background: #fff0f0;
   }
   .variant-sides-img{
-    width: 10%;
-    display: flex;
-    flex-direction: column;
+    width: 10dvw;
+    /* display: flex;
+    flex-direction: column; */
     gap: 5px;
   }
-  .variant-sides-img img{
-    height: auto;
-    max-width: 100%;
-    cursor: pointer;
-    border: 2px solid gray;
-    /* border-radius: 50%; */
-  }
+
   .variant-thumbnail {
+    max-width: 100%;
     width: 50px;
     height: 50px;
-    object-fit: cover;
+    cursor: pointer;
     margin-bottom: 10px;
-    border: 2px solid transparent;
     transition: border 0.3s ease;
+    border: 2px solid gray;
   }
   
   .variant-thumbnail:hover {
@@ -73,6 +74,39 @@
   }
   
   .addons-container{
-    width: 30%;
+    width: 40dvw;
   }
+  @media (max-width:768px){
+    .modal-variant-img{
+      height: 200px;
+    }
+    .modal-content {
+      width: 90vw; /* Take up 90% of the viewport width */
+    }
+    .addons-container{
+      width: 50dvw;
+    }
+  }
+  @media(max-width:500px){
+    .modal-content {
+      height: 90lvh;
+    }
+    .modal-product-details{
+      flex-direction: column;
+    }
+    .modal-product{
+      flex-direction: column-reverse;
+    }
+    .modal-variant-img{
+      height: 150px;
+    }
+    .variant-sides-img{
+      width: 100%;
+      flex-direction: row;
+    }
+    .variant-thumbnail{
+      margin-right: 10px;
+    }
+  }
+  
   
