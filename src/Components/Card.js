@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Modal from './Modal';
 import './Card.css'
 
-
 const Card = ({ price, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone,
     addon_variants = [], setPrice, selectedData, setSelectedData, product, category,totalBOQCost }) => {
 
@@ -31,8 +30,6 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
     const [isImageLoaded, setIsImageLoaded] = useState(false);
 
     const basePrice = selectedPrice;  //price
-
-    // console.log("variant data", colorOptions);
 
     useEffect(() => {
         if (showModal) {
@@ -94,10 +91,6 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
     //   setCartItems((prev) => prev.filter((item) => item.title !== titleToRemove));
     //   toggleMinimize();
     // };
-
-    // useEffect(() => {
-    //   updateBOQTotal(calculateTotalPrice);
-    // }, [calculateTotalPrice]); 
 
     useEffect(() => {
         if (product && product_variants.length > 0) {
@@ -220,9 +213,6 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
         localStorage.removeItem('selectedData');
     };
 
-    // console.log("selected data", selectedData)
-    // console.log("product",product)
-
     if (!isMinimized) {
         return (
             <>
@@ -248,10 +238,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
             </>
         );
     }
-    // console.log("productsData length:", product.length);
-    // console.log("productsData content:", product);
-    // console.log("sub category",subCat)
-
+    
     // const handleAddToCartClick = () => {
     //   const cartItem = {
     //     title: selectedTitle,
@@ -378,15 +365,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
                 <p>Total Price: ₹{calculateTotalPrice}</p>
                 <button className="done-button" onClick={handleDoneClick}>Done</button>
 
-
-                {/* <button
-            className="done-button"
-            onClick={() => {
-              handelSelectedData();
-            }}
-          >
-            Done
-          </button> */}
+                {/* <button className="done-button" onClick={() => { handelSelectedData(); }} > Done </button> */}
             </CardSection>
         </div>
     );

@@ -6,16 +6,14 @@ import './boq.css';
 // import Cart from './Cart';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 import jsPDF from "jspdf";
-// import autoTable from "jspdf-autotable";
 import '../Components/Modal'
 import "jspdf-autotable";
 import Card from '../Components/Card';
 import QuestionModal from '../Components/questionModal';
 
-
 const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [priceRange, setPriceRange] = useState([1000, 12000]);
+  const [priceRange, setPriceRange] = useState([1000, 15000]);
   const [productsData, setProductData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [roomNumbers, setRoomNumbers] = useState([]);
@@ -41,9 +39,6 @@ const App = () => {
     'Flooring',
     'Accessories'
   ];
-  // console.log("category", selectedCategory);
-  // const storedBOQCost = JSON.parse(localStorage.getItem("totalBOQCost"));
-  // console.log("stored boq",storedBOQCost); 
 
   async function fetchRoomData() {
     try {
@@ -124,7 +119,6 @@ const App = () => {
       console.error('Error fetching room data:', error);
     }
   }
-  // console.log("areas", roomAreas)
 
   async function fetchProductsData() {
     try {
@@ -196,7 +190,6 @@ const App = () => {
 
   useEffect(() => {
     updateBOQTotal();
-    // console.log("user responce for flooring ", userResponses)
   }, [price, userResponses]);
 
 
@@ -216,10 +209,6 @@ const App = () => {
     setShowFilters(!showFilters);
   };
 
-  // const updateBOQTotal = (newTotalPrice) => {
-  //   setTotalBOQCost(prev => prev + newTotalPrice);
-  // };
-
   const updateBOQTotal = () => {
     // Sum of all prices
     const baseTotal = Object.values(price).reduce((acc, curr) => acc + curr, 0);
@@ -234,7 +223,6 @@ const App = () => {
     const total = baseTotal + additionalCost;
     setTotalBOQCost(total);
   };
-
 
   const filteredProducts = useMemo(() => {
     return productsData.filter((product) => {
@@ -305,14 +293,11 @@ const App = () => {
     updateBOQTotal();
   };
 
-
   const [expandedSubcategory, setExpandedSubcategory] = useState(null);
 
   const toggleSubcategory = (subcategory) => {
     setExpandedSubcategory((prev) => (prev === subcategory ? null : subcategory));
   };
-
-
 
   const handlePrice = (subCat, value) => {
     setPrice((prevPrices) => {
@@ -500,11 +485,6 @@ const App = () => {
     }
   }, [selectedData, roomNumbers]);
 
-  // console.log("total boq cost", totalBOQCost)
-  // console.log("flooring area",userResponses.flooringArea)
-  // console.log("all products",productsData)
-  // console.log("Filtered Products:", productsData.filter(product => product.subcategory1 === userResponses.customizeSelection));
-
   return (
     <div className="App">
       <div className="search-filter">
@@ -525,7 +505,7 @@ const App = () => {
               onChange={handleSliderChange}
               valueLabelDisplay="auto"
               min={1000}
-              max={12000}
+              max={15000}
               className="price-slider"
             />
             <Select
@@ -611,7 +591,7 @@ const App = () => {
               ) : (
                 // Render subcategories normally for other categories or if flooringArea is not 'allArea'
                 Object.entries(subcategories)
-                  .filter(([subcategory]) => subcategory !== 'All Areas')
+                  // .filter(([subcategory]) => subcategory !== 'All Areas')
                   .filter(([subcategory]) => {
                     const roomCount = roomNumbers[0]; // Assuming roomNumbers[0] holds the counts
 
@@ -686,8 +666,7 @@ const App = () => {
                                 }
                                 product_variants={product.product_variants}
                                 initialMinimized={product.initialMinimized}
-                                // onAddToCart={handleAddToCart}
-                                // setCartItems={setCartItems}
+                                // onAddToCart={handleAddToCart} // setCartItems={setCartItems}
                                 data={roomNumbers[0]}
                                 subCat={subcategory}
                                 onDone={updateBOQTotal}
@@ -719,9 +698,7 @@ const App = () => {
         />
       )}
 
-      {/* <Cart
-        open={open} setOpen={setOpen} cartItems={cartItems}
-      />       */}
+      {/* <Cart open={open} setOpen={setOpen} cartItems={cartItems} />       */}
       <div>
         {/* <button className='cart-icon fixed bottom-10 right-10 bg-black text-white rounded-xl ' onClick={toggleCart}><ShoppingCart size={40} /></button> */}
         <h4 className='fixed right-10 bottom-2 bg-gray-300 px-3 rounded'>Total Cost: ₹
