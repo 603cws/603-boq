@@ -2,12 +2,12 @@ import React, { useState, useMemo, useEffect } from 'react';
 import Modal from './Modal';
 import './Card.css'
 
-const Card = ({ price, product_variants = [], addOns, initialMinimized = false, roomData, quantity, onAddToCart, data, subCat, onDone,
-    addon_variants = [], setPrice, selectedData, setSelectedData, product, category,totalBOQCost }) => {
+const Card = ({ price, product_variants = [], addOns, initialMinimized = true, roomData, quantity, onAddToCart, data, subCat, onDone,
+    addon_variants = [], setPrice, selectedData, setSelectedData, product, category, areasData, totalBOQCost }) => {
 
     const [isMinimized, setIsMinimized] = useState(initialMinimized);
     const [selectedAddOns, setSelectedAddOns] = useState({});
-    const [showModal, setShowModal] = useState(false)
+    const [showModal, setShowModal] = useState(false);
 
     const colorOptions = product_variants
         .filter(variant => variant.image)  // Filter out variants with null or undefined images
@@ -76,12 +76,20 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
             0
         );
         const normalizedSubCat = subCat.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const matchedKey = Object.keys(data).find((key) =>
-            normalizedSubCat.includes(key.toLowerCase())
-        );
-        const quantity = matchedKey ? data[matchedKey] : 1;
+        let matchedKey, quantity;
+        if (category === "Furniture") {     //calculation of price * quantity
+            matchedKey = Object.keys(data).find((key) =>
+                normalizedSubCat.includes(key.toLowerCase())
+            );
+            quantity = matchedKey ? data[matchedKey] : 1;
+        } else {                            //calculation of price * area
+            matchedKey = Object.keys(areasData).find((key) =>
+                normalizedSubCat.includes(key.toLowerCase())
+            );
+            quantity = matchedKey ? areasData[matchedKey] : 1;
+        }
         return (quantity || 0) * (selectedPrice + totalAddOnPrice);
-    }, [selectedAddOns, selectedPrice, data, subCat]);
+    }, [selectedAddOns, selectedPrice, data, subCat, areasData, category]);
 
     const toggleMinimize = () => {
         setIsMinimized((prev) => !prev);
@@ -92,14 +100,14 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = false, 
     //   toggleMinimize();
     // };
 
+    const [selectedProductId, setSelectedProductId] = useState(null); // Dynamic selection
     useEffect(() => {
         if (product && product_variants.length > 0) {
             // Preselect data when the component mounts or product changes
             preselectData(product.id);
+            setSelectedProductId(product.id);
         }
     }, [product, selectedData]); // Run this effect whenever `product` or `selectedData` changes
-
-    const [selectedProductId, setSelectedProductId] = useState(null); // Dynamic selection
 
     const preselectData = (productID) => {
         const existingProduct = selectedData.find((item) => item.id === productID);

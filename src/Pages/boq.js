@@ -84,6 +84,9 @@ const App = () => {
           meetingroomlarge: latestRoomData.meetingroomlarge,
           hrroom: latestRoomData.hrroom,
           financeroom: latestRoomData.financeroom,
+          videorecordingroom: latestRoomData.videorecordingroom,
+          breakoutroom: latestRoomData.breakoutroom,
+          executivewashroom: latestRoomData.executivewashroom,
         };
         setRoomNumbers([roomsArray]);
       }
@@ -111,7 +114,24 @@ const App = () => {
           meetingroomlarge: latestAreaData.meetingroomlarge,
           hrroom: latestAreaData.hrroom,
           financeroom: latestAreaData.financeroom,
+          videorecordingroom: latestAreaData.videorecordingroom,
+          breakoutroom: latestAreaData.breakoutroom,
+          executivewashroom: latestAreaData.executivewashroom,
           totalArea: latestAreaData.totalArea,
+
+          openworkspaces: latestAreaData.linear + latestAreaData.ltype,
+          cabins: latestAreaData.md + latestAreaData.manager + latestAreaData.small,
+          meetingrooms: latestAreaData.discussionroom + latestAreaData.interviewroom + latestAreaData.conferenceroom +
+            latestAreaData.boardroom + latestAreaData.meetingroom + latestAreaData.meetingroomlarge + latestAreaData.hrroom +
+            latestAreaData.financeroom + latestAreaData.sales + latestAreaData.videorecordingroom,
+          publicspaces: latestAreaData.reception + latestAreaData.lounge + latestAreaData.phonebooth + latestAreaData.breakoutroom,
+          supportspaces: latestAreaData.ups + latestAreaData.bms + latestAreaData.server + latestAreaData.other + latestAreaData.executivewashroom,
+
+          allareas: latestAreaData.linear + latestAreaData.ltype + latestAreaData.md + latestAreaData.manager + latestAreaData.small +
+            latestAreaData.discussionroom + latestAreaData.interviewroom + latestAreaData.conferenceroom + latestAreaData.boardroom +
+            latestAreaData.meetingroom + latestAreaData.meetingroomlarge + latestAreaData.hrroom + latestAreaData.financeroom +
+            latestAreaData.sales + latestAreaData.videorecordingroom + latestAreaData.reception + latestAreaData.lounge + latestAreaData.phonebooth +
+            latestAreaData.breakoutroom + latestAreaData.ups + latestAreaData.bms + latestAreaData.server + latestAreaData.other + latestAreaData.executivewashroom,
         };
         setRoomAreas([areasArray]);
       }
@@ -294,10 +314,16 @@ const App = () => {
   };
 
   const [expandedSubcategory, setExpandedSubcategory] = useState(null);
+  const [subCat, setSubCat] = useState(null);
 
   const toggleSubcategory = (subcategory) => {
     setExpandedSubcategory((prev) => (prev === subcategory ? null : subcategory));
   };
+  useEffect(() => {
+    if (expandedSubcategory != null || expandedSubcategory != undefined) {
+      handleCardClick(subCat);
+    }
+  }, [expandedSubcategory]);
 
   const handlePrice = (subCat, value) => {
     setPrice((prevPrices) => {
@@ -440,23 +466,30 @@ const App = () => {
 
   // Update price state whenever selectedData or roomNumbers change
   useEffect(() => {
-    const calculateTotalPriceBySubcategory = (data, roomNumbers) => {
-      if (!data || !Array.isArray(data) || !roomNumbers || !roomNumbers[0]) return {};
+    const calculateTotalPriceBySubcategory = (data, roomNumbers, roomAreas) => {
+      if (!data || !Array.isArray(data) || !roomNumbers || !roomNumbers[0] || !roomAreas || !roomAreas[0]) return {};
 
       // Extract the first object from roomNumbers (since it's an array with a single object)
       const roomNumbersMap = roomNumbers[0];
+      const areasData = roomAreas[0];
 
       return data.reduce((acc, item) => {
+        const category = item?.category || "Unknown";
         const subcategory = item?.subcategory || "Unknown";
         const normalizedSubCat = normalizeKey(subcategory); // Normalize the subcategory name
 
-        // Match keys using partial comparison
-        const matchedKey = Object.keys(roomNumbersMap).find((key) =>
-          normalizedSubCat.includes(normalizeKey(key))
-        );
-
-        // Get quantity from roomNumbersMap, default to 1 if no match
-        const quantity = matchedKey ? roomNumbersMap[matchedKey] : 1;
+        let matchedKey, quantity;
+        if (category === "Furniture") {     //calculation of price * quantity
+          matchedKey = Object.keys(roomNumbersMap).find((key) =>
+            normalizedSubCat.includes(key.toLowerCase())
+          );
+          quantity = matchedKey ? roomNumbersMap[matchedKey] : 1;
+        } else {                            //calculation of price * area
+          matchedKey = Object.keys(areasData).find((key) =>
+            normalizedSubCat.includes(key.toLowerCase())
+          );
+          quantity = matchedKey ? areasData[matchedKey] : 1;
+        }
 
         const variantPrice = item?.product_variant?.variant_price || 0;
 
@@ -478,12 +511,21 @@ const App = () => {
     };
 
     if (selectedData && selectedData.length > 0) {
-      const calculatedPrice = calculateTotalPriceBySubcategory(selectedData, roomNumbers);
+      const calculatedPrice = calculateTotalPriceBySubcategory(selectedData, roomNumbers, roomAreas);
       setPrice(calculatedPrice);
     } else {
       setPrice({});
     }
-  }, [selectedData, roomNumbers]);
+  }, [selectedData, roomNumbers, roomAreas]);
+
+  const handleCardClick = (subcategory) => {
+    console.log("Card clicked!");
+    setPrice((prevPrice) => ({
+      ...prevPrice,
+      [subcategory]: 0,
+    }));
+  };
+
 
   return (
     <div className="App">
@@ -580,6 +622,7 @@ const App = () => {
                                   groupedProducts={groupedProducts}
                                   category={category}
                                   totalBOQCost={totalBOQCost}
+                                  areasData={roomAreas[0]}
                                 />
                               </div>
                             );
@@ -591,7 +634,7 @@ const App = () => {
               ) : (
                 // Render subcategories normally for other categories or if flooringArea is not 'allArea'
                 Object.entries(subcategories)
-                  // .filter(([subcategory]) => subcategory !== 'All Areas')
+                  .filter(([subcategory]) => subcategory !== 'All Areas')
                   .filter(([subcategory]) => {
                     const roomCount = roomNumbers[0]; // Assuming roomNumbers[0] holds the counts
 
@@ -633,12 +676,12 @@ const App = () => {
                   })
                   .map(([subcategory, products]) => (
                     <div key={subcategory} className="subcategory-section">
-                      <h3
+                      <div
                         className="subcategory-heading"
-                        onClick={() => toggleSubcategory(subcategory)}
+                        onClick={() => { toggleSubcategory(subcategory); setSubCat(subcategory); }}
                         style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                       >
-                        {subcategory}
+                        <h3 style={{ margin: 0 }}>{subcategory}</h3>
                         <h6 className="text-xs" style={{ margin: '0 10px' }}>
                           Total Cost of {subcategory}: ₹ {price[subcategory] || 0}
                         </h6>
@@ -649,7 +692,7 @@ const App = () => {
                             <ArrowDownNarrowWide size={20} />
                           )}
                         </span>
-                      </h3>
+                      </div>
                       {expandedSubcategory === subcategory && (
                         <div className="subcategory-content">
                           {products.map((product) => (
@@ -679,6 +722,7 @@ const App = () => {
                                 groupedProducts={groupedProducts}
                                 category={category}
                                 totalBOQCost={totalBOQCost}
+                                areasData={roomAreas[0]}
                               />
                             </div>
                           ))}
