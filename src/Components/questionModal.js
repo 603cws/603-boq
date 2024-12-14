@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
-const QuestionModal = ({ onClose, onSubmit }) => {
+const QuestionModal = ({ onClose, onSubmit,cabinsQuestions }) => {
+  
   const initialQuestions = [
     {
       name: "flooringStatus",
@@ -19,6 +20,16 @@ const QuestionModal = ({ onClose, onSubmit }) => {
       ],
     },
   ];
+  const cabinRelatedQuestions = [
+    {
+      name: "cabinFlooring",
+      label: "Do you want same tile/carpet for all cabins or different for each cabin?",
+      options: [
+        { value: "Same", label: "Same" },
+        { value: "Customize", label: "Customize" },
+      ],
+    },
+  ];
 
   const [questions, setQuestions] = useState(initialQuestions);
   const [answers, setAnswers] = useState({});
@@ -30,7 +41,10 @@ const QuestionModal = ({ onClose, onSubmit }) => {
     if (savedAnswers) {
       setAnswers(JSON.parse(savedAnswers));
     }
-  }, []);
+    if (cabinsQuestions) {
+      setQuestions((cabinRelatedQuestions) )
+    }
+  }, [cabinsQuestions]);
 
   // Handle input changes and update answers state
   const handleInputChange = (e) => {

@@ -27,6 +27,8 @@ const App = () => {
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [userResponses, setUserResponses] = useState({});
   const [price, setPrice] = useState({});
+  const [workspaces, setWorkspaces] = useState([]);
+  const [cabinsQuestions, setCabinsQuestions] = useState(false);
   const categories = [
     'Furniture',
     'Civil / Plumbing',
@@ -39,6 +41,33 @@ const App = () => {
     'Flooring',
     'Accessories'
   ];
+  console.log("selected data", selectedData)
+  async function fetchWorkspaces() {
+    try {
+      const { data: workspacesData, error: workspacesError } = await supabase
+        .from('workspaces') // Querying the 'workspaces' table
+        .select(); // Select all columns
+
+      if (workspacesError) {
+        console.error('Error fetching workspaces:', workspacesError.message);
+        return; // Stop further processing
+      }
+
+      if (workspacesData) {
+        // Map through the data and parse the 'type' field from JSON
+        const parsedWorkspaces = workspacesData.map((workspace) => ({
+          ...workspace,
+          type: JSON.parse(workspace.type), // Parse 'type' if stored as JSON string
+        }));
+
+        setWorkspaces(parsedWorkspaces); // Update state with parsed data
+      }
+    } catch (error) {
+      console.error('Error fetching workspaces:', error.message); // Log error
+    }
+  }
+
+  // console.log("Workspace Data", workspaces)
 
   async function fetchRoomData() {
     try {
@@ -198,7 +227,7 @@ const App = () => {
   }
 
   useEffect(() => {
-    Promise.all([fetchRoomData(), fetchProductsData()]);
+    Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces()]);
   }, []);
   useEffect(() => {
     const savedData = localStorage.getItem('selectedData');
@@ -309,6 +338,7 @@ const App = () => {
       flooring: answers.flooringStatus,
       flooringArea: answers.flooringArea,
       customizeSelection: answers.customizeSelection,
+      cabinFlooring: answers.cabinFlooring,
     }));
     updateBOQTotal();
   };
@@ -318,9 +348,17 @@ const App = () => {
 
   const toggleSubcategory = (subcategory) => {
     setExpandedSubcategory((prev) => (prev === subcategory ? null : subcategory));
+    if (subcategory === "Cabins" && expandedSubcategory === null) {
+      setCabinsQuestions(true);
+      setShowQuestionModal(true);
+    } else {
+      setCabinsQuestions(false);
+      setShowQuestionModal(false);
+    }
   };
+
   useEffect(() => {
-    if (expandedSubcategory != null || expandedSubcategory != undefined) {
+    if (expandedSubcategory !== null || expandedSubcategory !== undefined) {
       handleCardClick(subCat);
     }
   }, [expandedSubcategory]);
@@ -526,7 +564,6 @@ const App = () => {
     }));
   };
 
-
   return (
     <div className="App">
       <div className="search-filter">
@@ -695,37 +732,84 @@ const App = () => {
                       </div>
                       {expandedSubcategory === subcategory && (
                         <div className="subcategory-content">
-                          {products.map((product) => (
-                            <div key={product.id}>
-                              <Card
-                                addOns={product.addons}
-                                addon_variants={
-                                  product.addons?.flatMap((addon) =>
-                                    addon.addon_variants?.map((variant) => ({
-                                      ...variant,
-                                      addonTitle: addon.title, // Optionally add addon title to the variant
-                                    }))
-                                  ) || []
-                                }
-                                product_variants={product.product_variants}
-                                initialMinimized={product.initialMinimized}
-                                // onAddToCart={handleAddToCart} // setCartItems={setCartItems}
-                                data={roomNumbers[0]}
-                                subCat={subcategory}
-                                onDone={updateBOQTotal}
-                                setPrice={handlePrice}
-                                price={price}
-                                selectedData={selectedData}
-                                setSelectedData={setSelectedData}
-                                product={product}
-                                categories={categories}
-                                groupedProducts={groupedProducts}
-                                category={category}
-                                totalBOQCost={totalBOQCost}
-                                areasData={roomAreas[0]}
-                              />
-                            </div>
-                          ))}
+                          {/* Handle "Customize" option for cabins */}
+                          {subcategory === "Cabins" && userResponses?.cabinFlooring === "Customize" ? (
+                            workspaces
+                              .find((workspace) => workspace.name === "Cabins")
+                              ?.type.map((cabinType, index) => (
+                                <div key={index} className="cabin-category">
+                                  <h4 className="text-md font-bold">{cabinType}</h4>
+                                  <div className="cabin-products">
+                                    {/* Filter products with subcategory "Cabins" */}
+                                    {products
+                                      .filter((product) => product.subcategory === "Cabins")
+                                      .map((product) => (
+                                        <div key={product.id}>
+                                          <Card
+                                            addOns={product.addons}
+                                            addon_variants={
+                                              product.addons?.flatMap((addon) =>
+                                                addon.addon_variants?.map((variant) => ({
+                                                  ...variant,
+                                                  addonTitle: addon.title, // Optionally add addon title to the variant
+                                                }))
+                                              ) || []
+                                            }
+                                            product_variants={product.product_variants}
+                                            initialMinimized={product.initialMinimized}
+                                            // onAddToCart={handleAddToCart} // setCartItems={setCartItems}
+                                            data={roomNumbers[0]}
+                                            subCat={cabinType}
+                                            onDone={updateBOQTotal}
+                                            setPrice={handlePrice}
+                                            price={price}
+                                            selectedData={selectedData}
+                                            setSelectedData={setSelectedData}
+                                            product={product}
+                                            categories={categories}
+                                            groupedProducts={groupedProducts}
+                                            category={category}
+                                            totalBOQCost={totalBOQCost}
+                                            areasData={roomAreas[0]}
+                                          />
+                                        </div>
+                                      ))}
+                                  </div>
+                                </div>
+                              ))
+                          ) : (
+                            /* Default product rendering for other subcategories or non-customize */
+                            products.map((product) => (
+                              <div key={product.id}>
+                                <Card
+                                  addOns={product.addons}
+                                  addon_variants={
+                                    product.addons?.flatMap((addon) =>
+                                      addon.addon_variants?.map((variant) => ({
+                                        ...variant,
+                                        addonTitle: addon.title,
+                                      }))
+                                    ) || []
+                                  }
+                                  product_variants={product.product_variants}
+                                  initialMinimized={product.initialMinimized}
+                                  data={roomNumbers[0]}
+                                  subCat={subcategory}
+                                  onDone={updateBOQTotal}
+                                  setPrice={handlePrice}
+                                  price={price}
+                                  selectedData={selectedData}
+                                  setSelectedData={setSelectedData}
+                                  product={product}
+                                  categories={categories}
+                                  groupedProducts={groupedProducts}
+                                  category={category}
+                                  totalBOQCost={totalBOQCost}
+                                  areasData={roomAreas[0]}
+                                />
+                              </div>
+                            ))
+                          )}
                         </div>
                       )}
                     </div>
@@ -737,6 +821,7 @@ const App = () => {
       </div>
       {showQuestionModal && (
         <QuestionModal
+          cabinsQuestions={cabinsQuestions}
           onClose={closeQuestionModal}
           onSubmit={handleQuestionSubmit}
         />

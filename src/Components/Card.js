@@ -177,10 +177,12 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
             console.error("Product not found or ID does not match.");
             return;
         }
+        const uniqueKey = `${product.id}-${subCat}`
         const productData = {
+            uniqueKey,
             id: product.id,
-            category: product.category,
-            subcategory: product.subcategory,
+            category: category,
+            subcategory: subCat,
             subcategory1: product.subcategory1,
             product_variant: {
                 variant_title: selectedTitle,
@@ -196,7 +198,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
         setSelectedData((prevData) => {
             // Find if the product already exists by product.id
             const productIndex = prevData.findIndex(
-                (item) => item.id === product.id // Check by `id` not by `product_variant.id`
+                (item) => item.uniqueKey === uniqueKey // Check by `id` not by `product_variant.id`
             );
 
             let updatedData;
