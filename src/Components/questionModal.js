@@ -62,15 +62,15 @@ const QuestionModal = ({ onClose, onSubmit,cabinsQuestions }) => {
     localStorage.setItem("answers", JSON.stringify(updatedAnswers));
 
     if (name === "flooringArea" && value === "allArea") {
-      const customizeSelectionExists = questions.some(
-        (q) => q.name === "customizeSelection"
+      const flooringTypeExists = questions.some(
+        (q) => q.name === "flooringType"
       );
 
-      if (!customizeSelectionExists) {
+      if (!flooringTypeExists) {
         const updatedQuestions = [
           ...questions,
           {
-            name: "customizeSelection",
+            name: "flooringType",
             label: "Select flooring type for all areas:",
             options: [
               { value: "Carpet", label: "Carpet" },
