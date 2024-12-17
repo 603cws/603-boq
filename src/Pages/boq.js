@@ -29,6 +29,8 @@ const App = () => {
   const [price, setPrice] = useState({});
   const [workspaces, setWorkspaces] = useState([]);
   const [cabinsQuestions, setCabinsQuestions] = useState(false);
+  const categoriesWithModal = ['Flooring', 'HVAC'];   // Array of categories that should show the modal when clicked
+
   const categories = [
     'Furniture',
     'Civil / Plumbing',
@@ -241,6 +243,8 @@ const App = () => {
     updateBOQTotal();
   }, [price, userResponses]);
 
+  console.log("User response: ", userResponses);
+  console.log("Workspace: ", workspaces);
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -301,11 +305,11 @@ const App = () => {
 
   const groupedProducts = useMemo(() => {
     const grouped = {};
-  
+
     filteredProducts.forEach(product => {
       // Split product.subcategory by commas and trim spaces
       const subcategories = product.subcategory.split(',').map(sub => sub.trim());
-  
+
       subcategories.forEach(subcategory => {
         if (!grouped[product.category]) {
           grouped[product.category] = {};
@@ -316,10 +320,10 @@ const App = () => {
         grouped[product.category][subcategory].push(product);
       });
     });
-  
+
     return grouped;
   }, [filteredProducts]);
-  
+
 
   // const toggleCart = () => {
   //   setOpen(true);
@@ -330,7 +334,8 @@ const App = () => {
   // };
 
   const handleCategoryClick = (category) => {
-    if (category === "Flooring") {
+    // Check if the category requires the modal
+    if (categoriesWithModal.includes(category)) {
       setShowQuestionModal(true);
     }
   };
@@ -338,6 +343,21 @@ const App = () => {
   const closeQuestionModal = () => {
     setShowQuestionModal(false);
   };
+
+  useEffect(() => {
+    let savedAnswers = localStorage.getItem("answers");
+    savedAnswers = JSON.parse(savedAnswers);
+    if (savedAnswers) {
+
+      setUserResponses((prevResponses) => ({
+        ...prevResponses,
+        flooring: savedAnswers.flooringStatus,
+        flooringArea: savedAnswers.flooringArea,
+        customizeSelection: savedAnswers.customizeSelection,
+        cabinFlooring: savedAnswers.cabinFlooring,
+      }));
+    }
+  }, []);
 
   const handleQuestionSubmit = (answers) => {
     console.log("Answers from QuestionModal:", answers); // Log submitted answers
@@ -347,7 +367,17 @@ const App = () => {
       flooringArea: answers.flooringArea,
       customizeSelection: answers.customizeSelection,
       cabinFlooring: answers.cabinFlooring,
+      [expandedSubcategory]: answers, // Store answers for the subcategory
+      // [expandedSubcategory]: answers,
     }));
+
+    // Hide the modal and reset questions state
+    setShowQuestionModal(false);
+    setCabinsQuestions(false);
+
+    setExpandedSubcategory(expandedSubcategory);
+
+    // Update the total cost or other BOQ data if needed
     updateBOQTotal();
   };
 
@@ -360,16 +390,21 @@ const App = () => {
       // Ensure it only collapses or expands the specific subcategory
       return prev === key ? null : key; // If already expanded, collapse it; otherwise, expand it
     });
-  
-    if (subcategory === "Cabins" && expandedSubcategory === null) {
-      setCabinsQuestions(true);
+
+    // Prevent expansion while modal is open
+    if (showQuestionModal) return;
+
+    // You can dynamically check for categories that need modal handling
+    const workspaceNames = workspaces.map(workspace => workspace.name);
+
+    if (categoriesWithModal.includes(category) && workspaceNames.includes(subcategory)) {
+      setCabinsQuestions(workspaceNames.includes(subcategory));
       setShowQuestionModal(true);
-    } else {
-      setCabinsQuestions(false);
-      setShowQuestionModal(false);
+      setExpandedSubcategory(`${category}-${subcategory}`);
+      return;
     }
   };
-  
+
   useEffect(() => {
     if (expandedSubcategory !== null || expandedSubcategory !== undefined) {
       handleCardClick(subCat);
@@ -577,6 +612,39 @@ const App = () => {
     }));
   };
 
+  const renderCards = (products, subCat, category) => {
+    return products.map((product) => (
+      <div key={product.id}>
+        <Card
+          addOns={product.addons}
+          addon_variants={
+            product.addons?.flatMap((addon) =>
+              addon.addon_variants?.map((variant) => ({
+                ...variant,
+                addonTitle: addon.title, // Optionally add addon title to the variant
+              }))
+            ) || []
+          }
+          product_variants={product.product_variants}
+          initialMinimized={product.initialMinimized}
+          data={roomNumbers[0]}
+          subCat={subCat}
+          onDone={updateBOQTotal}
+          setPrice={handlePrice}
+          price={price}
+          selectedData={selectedData}
+          setSelectedData={setSelectedData}
+          product={product}
+          categories={categories}
+          groupedProducts={groupedProducts}
+          category={category}
+          totalBOQCost={totalBOQCost}
+          areasData={roomAreas[0]}
+        />
+      </div>
+    ));
+  };
+
   return (
     <div className="App">
       <div className="search-filter">
@@ -618,7 +686,7 @@ const App = () => {
       {roomNumbers.length > 0 && (
         <RoomDataBox roomData={Object.fromEntries(Object.entries(roomNumbers[0]).filter(([_, value]) => value > 0))} />
       )}
-      
+
       <div className="products-grid">
         {loading ? (
           Array.from({ length: 4 }).map((_, index) => (
@@ -633,7 +701,7 @@ const App = () => {
           Object.entries(groupedProducts).map(([category, subcategories]) => (
             <div key={category} className="category-section">
               <h2 onClick={() => handleCategoryClick(category)}>{category}</h2>
-          
+
               {/* Check if category is 'Flooring' and answer is 'allArea' */}
               {category === 'Flooring' && userResponses.flooringArea === 'allArea' ? (
                 <div>
@@ -642,37 +710,14 @@ const App = () => {
                     <div>
                       <h3>Showing products for: {userResponses.customizeSelection}</h3>
                       <div className="subcategory-section">
-                        {productsData
-                          .filter(product => product.subcategory === 'All Areas' && product.subcategory1 === userResponses.customizeSelection)
-                          .map((product) => (
-                            <div key={product.id}>
-                              {/* Render product info */}
-                              <Card
-                                addOns={product.addons}
-                                addon_variants={product.addons?.flatMap((addon) =>
-                                  addon.addon_variants?.map((variant) => ({
-                                    ...variant,
-                                    addonTitle: addon.title, // Optionally add addon title to the variant
-                                  }))
-                                ) || []}
-                                product_variants={product.product_variants}
-                                initialMinimized={product.initialMinimized}
-                                data={roomNumbers[0]}
-                                subCat="All Areas"
-                                onDone={updateBOQTotal}
-                                setPrice={handlePrice}
-                                price={price}
-                                selectedData={selectedData}
-                                setSelectedData={setSelectedData}
-                                product={product}
-                                categories={categories}
-                                groupedProducts={groupedProducts}
-                                category={category}
-                                totalBOQCost={totalBOQCost}
-                                areasData={roomAreas[0]}
-                              />
-                            </div>
-                          ))}
+                        {renderCards(
+                          productsData.filter(
+                            (product) =>
+                              product.subcategory === 'All Areas' &&
+                              product.subcategory1 === userResponses.customizeSelection
+                          ),
+                          'All Areas'
+                        )}
                       </div>
                     </div>
                   )}
@@ -688,33 +733,33 @@ const App = () => {
                   .filter(([subcategory]) => {
                     const roomCount = roomNumbers[0];
                     const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-          
+
                     const isFurniture = normalize(category) === 'furniture';
                     if (!isFurniture) {
                       return true;
                     }
-          
+
                     const normalizedSubcategory = normalize(subcategory);
-          
+
                     const matchFound = Object.keys(roomCount).some((roomKey) => {
                       const normalizedRoomKey = normalize(roomKey);
                       return normalizedSubcategory.includes(normalizedRoomKey);
                     });
-          
+
                     if (!matchFound) {
                       console.warn(`Subcategory "${subcategory}" does not match any roomNumbers keys.`);
                       return false;
                     }
-          
+
                     const matchingRoomKey = Object.keys(roomCount).find((roomKey) =>
                       normalizedSubcategory.includes(normalize(roomKey))
                     );
-          
+
                     if (roomCount[matchingRoomKey] === 0) {
                       console.log(`Excluding subcategory "${subcategory}" because its count is 0.`);
                       return false;
                     }
-          
+
                     return true;
                   })
                   .map(([subcategory, products]) => (
@@ -739,92 +784,46 @@ const App = () => {
                           )}
                         </span>
                       </div>
-                      {expandedSubcategory === `${category}-${subcategory}` && (
+                      {expandedSubcategory === `${category}-${subcategory}` && !showQuestionModal && (
                         <div className="subcategory-content">
-                          {subcategory === 'Cabins' && userResponses?.cabinFlooring === 'Customize' ? (
-                            workspaces
-                              .find((workspace) => workspace.name === 'Cabins')
-                              ?.type.map((cabinType, index) => (
-                                <div key={`${subcategory}-${cabinType}-${index}`} className="cabin-category">
-                                  <h4 className="text-md font-bold">{cabinType}</h4>
-                                  <div className="cabin-products">
-                                    {products
-                                      .filter((product) => product.subcategory === 'Cabins')
-                                      .map((product) => (
-                                        <div key={`${subcategory}-${product.id}`}>
-                                          <Card
-                                            addOns={product.addons}
-                                            addon_variants={product.addons?.flatMap((addon) =>
-                                              addon.addon_variants?.map((variant) => ({
-                                                ...variant,
-                                                addonTitle: addon.title,
-                                              }))
-                                            ) || []}
-                                            product_variants={product.product_variants}
-                                            initialMinimized={product.initialMinimized}
-                                            data={roomNumbers[0]}
-                                            subCat={cabinType}
-                                            onDone={updateBOQTotal}
-                                            setPrice={handlePrice}
-                                            price={price}
-                                            selectedData={selectedData}
-                                            setSelectedData={setSelectedData}
-                                            product={product}
-                                            categories={categories}
-                                            groupedProducts={groupedProducts}
-                                            category={category}
-                                            totalBOQCost={totalBOQCost}
-                                            areasData={roomAreas[0]}
-                                          />
-                                        </div>
-                                      ))}
+                          {workspaces.map((workspace) =>
+                            subcategory === workspace.name && userResponses?.cabinFlooring === "Customize" ? (
+                              workspace.type.map((workspaceType, index) => (
+                                <div key={index} className={`${workspace.name.toLowerCase()}-category`}>
+                                  <h4 className="text-md font-bold">{workspaceType}</h4>
+                                  <div className={`${workspace.name.toLowerCase()}-products`}>
+                                    {renderCards(
+                                      products.filter((product) => product.subcategory === workspace.name),
+                                      workspaceType,
+                                      category
+                                    )}
                                   </div>
                                 </div>
                               ))
-                          ) : (
-                            products.map((product) => (
-                              <div key={`${subcategory}-${product.id}`}>
-                                <Card
-                                  addOns={product.addons}
-                                  addon_variants={product.addons?.flatMap((addon) =>
-                                    addon.addon_variants?.map((variant) => ({
-                                      ...variant,
-                                      addonTitle: addon.title,
-                                    }))
-                                  ) || []}
-                                  product_variants={product.product_variants}
-                                  initialMinimized={product.initialMinimized}
-                                  data={roomNumbers[0]}
-                                  subCat={subcategory}
-                                  onDone={updateBOQTotal}
-                                  setPrice={handlePrice}
-                                  price={price}
-                                  selectedData={selectedData}
-                                  setSelectedData={setSelectedData}
-                                  product={product}
-                                  categories={categories}
-                                  groupedProducts={groupedProducts}
-                                  category={category}
-                                  totalBOQCost={totalBOQCost}
-                                  areasData={roomAreas[0]}
-                                />
-                              </div>
-                            ))
+                            ) : null
                           )}
+                          {/* Render default content if no specific category match */}
+                          {!(userResponses?.cabinFlooring === "Customize") && renderCards(products, subcategory, category)}
                         </div>
                       )}
                     </div>
                   ))
               )}
             </div>
-          ))          
+          ))
         )}
       </div>
       {showQuestionModal && (
         <QuestionModal
+          subcategory={expandedSubcategory}
           cabinsQuestions={cabinsQuestions}
-          onClose={closeQuestionModal}
+          // onClose={closeQuestionModal}
           onSubmit={handleQuestionSubmit}
+          initialAnswers={userResponses[expandedSubcategory]} // Pass previous responses
+          onClose={() => {
+            setShowQuestionModal(false); // Close the modal
+            setCabinsQuestions(false); // Reset questions state
+          }}
         />
       )}
 
