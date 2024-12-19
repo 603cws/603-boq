@@ -4,7 +4,7 @@ import { supabase } from '../supabase';
 import RoomDataBox from '../RoomDataBox';
 import './boq.css';
 // import Cart from './Cart';
-import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
+import { ArrowDownNarrowWide, ArrowLeftFromLine, ArrowRightFromLine, ArrowUpNarrowWide } from 'lucide-react';
 // import jsPDF from "jspdf";
 import '../Components/Modal'
 // import "jspdf-autotable";
@@ -31,6 +31,7 @@ const App = () => {
   const [price, setPrice] = useState({});
   const [workspaces, setWorkspaces] = useState([]);
   const [cabinsQuestions, setCabinsQuestions] = useState(false);
+  const [category, setCategory] = useState('');
   const categoriesWithModal = ['Flooring', 'HVAC'];   // Array of categories that should show the modal when clicked
 
   const categories = [
@@ -230,6 +231,76 @@ const App = () => {
     }
   }
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Function to handle saving data to Supabase
+  const handleSaveBOQ = async (selectedData) => {
+    console.log("Selected data in save BOQ:", selectedData);
+
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      // Initialize arrays to collect comma-separated values
+      const product_ids = [];
+      const product_variant_ids = [];
+      const addon_ids = [];
+      const addon_variant_ids = [];
+
+      // Ensure selectedData is an array and process each product
+      (Array.isArray(selectedData) ? selectedData : []).forEach((product) => {
+        // Add product ID
+        if (product.id) product_ids.push(product.id);
+
+        // Add product variant ID
+        if (product.product_variant?.variant_id) {
+          product_variant_ids.push(product.product_variant.variant_id);
+        }
+
+        // Process addons and extract addonId and variantID
+        Object.keys(product.addons || {}).forEach((addonKey) => {
+          const addon = product.addons[addonKey];
+          if (addon.addonId) addon_ids.push(addon.addonId); // Extract addonId
+          if (addon.variantID) addon_variant_ids.push(addon.variantID); // Extract variantID
+        });
+      });
+
+      // Join the arrays into comma-separated strings
+      const product_id_str = product_ids.join(',');
+      const product_variant_id_str = product_variant_ids.join(',');
+      const addon_id_str = addon_ids.join(',');
+      const addon_variant_id_str = addon_variant_ids.join(',');
+
+      // Create a single row object
+      const formattedData = {
+        product_id: product_id_str,
+        product_variant_id: product_variant_id_str,
+        addon_id: addon_id_str,
+        addon_variant_id: addon_variant_id_str,
+      };
+
+      console.log("Formatted data:", formattedData);
+
+      // Insert a single row into Supabase
+      const { data, error } = await supabase.from('boqdata').insert([formattedData]);
+
+      if (error) {
+        console.error("Error saving BOQ:", error);
+        throw error;
+      }
+
+      console.log("Data saved successfully:", formattedData);
+    } catch (err) {
+      console.error("Error saving BOQ:", err);
+      setError("There was an error saving the BOQ. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+
+
   useEffect(() => {
     Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces()]);
   }, []);
@@ -245,8 +316,8 @@ const App = () => {
     updateBOQTotal();
   }, [price, userResponses]);
 
-  console.log("User response: ", userResponses);
-  console.log("Workspace: ", workspaces);
+  // console.log("User response: ", userResponses);
+  // console.log("Workspace: ", workspaces);
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -339,6 +410,7 @@ const App = () => {
     // Check if the category requires the modal
     if (categoriesWithModal.includes(category)) {
       setShowQuestionModal(true);
+      setCategory(category);
     }
   };
 
@@ -355,7 +427,7 @@ const App = () => {
         ...prevResponses,
         flooring: savedAnswers.flooringStatus,
         flooringArea: savedAnswers.flooringArea,
-        customizeSelection: savedAnswers.customizeSelection,
+        flooringType: savedAnswers.flooringType,
         cabinFlooring: savedAnswers.cabinFlooring,
       }));
     }
@@ -367,8 +439,10 @@ const App = () => {
       ...prevResponses,
       flooring: answers.flooringStatus,
       flooringArea: answers.flooringArea,
-      customizeSelection: answers.customizeSelection,
+      flooringType: answers.flooringType,
       cabinFlooring: answers.cabinFlooring,
+      hvacType: answers.hvacType,
+      hvacCentralized: answers.hvacCentralized,
       [expandedSubcategory]: answers, // Store answers for the subcategory
       // [expandedSubcategory]: answers,
     }));
@@ -400,9 +474,11 @@ const App = () => {
     const workspaceNames = workspaces.map(workspace => workspace.name);
 
     if (categoriesWithModal.includes(category) && workspaceNames.includes(subcategory)) {
-      setCabinsQuestions(workspaceNames.includes(subcategory));
-      setShowQuestionModal(true);
-      setExpandedSubcategory(`${category}-${subcategory}`);
+      if (category != "HVAC") {
+        setCabinsQuestions(workspaceNames.includes(subcategory));
+        setShowQuestionModal(true);
+        setExpandedSubcategory(`${category}-${subcategory}`);
+      }
       return;
     }
   };
@@ -563,20 +639,39 @@ const App = () => {
               <h2 onClick={() => handleCategoryClick(category)}>{category}</h2>
 
               {/* Check if category is 'Flooring' and answer is 'allArea' */}
-              {category === 'Flooring' && userResponses.flooringArea === 'allArea' ? (
+              {category === "Flooring" && userResponses.flooringArea === "allArea" ? (
                 <div>
                   {/* If user selected 'allArea', display the selected flooring type */}
-                  {userResponses.customizeSelection && (
+                  {userResponses.flooringType && (
                     <div>
-                      <h3>Showing products for: {userResponses.customizeSelection}</h3>
+                      <h3>Showing products for: {userResponses.flooringType}</h3>
                       <div className="subcategory-section">
                         {renderCards(
                           productsData.filter(
                             (product) =>
-                              product.subcategory === 'All Areas' &&
-                              product.subcategory1 === userResponses.customizeSelection
+                              product.subcategory === "All Areas" &&
+                              product.subcategory1 === userResponses.flooringType
                           ),
-                          'All Areas'
+                          "All Areas"
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : category === "HVAC" && userResponses.hvacType === "Centralized" ? (
+                <div>
+                  {/* If category is HVAC and user selected 'combination' */}
+                  {userResponses.hvacCentralized && (
+                    <div>
+                      <h3>Showing HVAC products for: {userResponses.hvacCentralized}</h3>
+                      <div className="subcategory-section">
+                        {renderCards(
+                          productsData.filter(
+                            (product) =>
+                              product.subcategory === "Centralized" &&
+                              product.subcategory1 === userResponses.hvacCentralized
+                          ),
+                          "Centralized"
                         )}
                       </div>
                     </div>
@@ -584,17 +679,20 @@ const App = () => {
                 </div>
               ) : (
                 Object.entries(subcategories)
-                  .filter(([subcategory]) => subcategory !== 'All Areas')
+                  .filter(([subcategory]) => subcategory !== "All Areas" && subcategory !== "Centralized")
                   .flatMap(([subcategory, products]) => {
-                    // If subcategory is 'Linear', handle mapping differently
-                    const subcategoryArray = subcategory === 'Linear' ? [subcategory] : subcategory.split(',').map((sub) => sub.trim());
+                    // Handle Linear subcategory splitting
+                    const subcategoryArray =
+                      subcategory === "Linear"
+                        ? [subcategory]
+                        : subcategory.split(",").map((sub) => sub.trim());
                     return subcategoryArray.map((sub) => [sub, products]);
                   })
                   .filter(([subcategory]) => {
                     const roomCount = roomNumbers[0];
-                    const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const normalize = (str) => str.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-                    const isFurniture = normalize(category) === 'furniture';
+                    const isFurniture = normalize(category) === "furniture";
                     if (!isFurniture) {
                       return true;
                     }
@@ -607,7 +705,6 @@ const App = () => {
                     });
 
                     if (!matchFound) {
-                      console.warn(`Subcategory "${subcategory}" does not match any roomNumbers keys.`);
                       return false;
                     }
 
@@ -616,7 +713,6 @@ const App = () => {
                     );
 
                     if (roomCount[matchingRoomKey] === 0) {
-                      console.log(`Excluding Category: "${category}" Subcategory: "${subcategory}" because its count is 0.`);
                       return false;
                     }
 
@@ -630,13 +726,18 @@ const App = () => {
                           toggleSubcategory(category, subcategory); // Pass category and subcategory to the toggle function
                           setSubCat(subcategory);
                         }}
-                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                        style={{
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
                       >
                         <h3 style={{ margin: 0 }}>{subcategory}</h3>
-                        <h6 className="text-xs" style={{ margin: '0 10px' }}>
+                        <h6 className="text-xs" style={{ margin: "0 10px" }}>
                           Total Cost of {subcategory}: ₹ {price[subcategory] || 0}
                         </h6>
-                        <span style={{ marginLeft: '50px' }}>
+                        <span style={{ marginLeft: "50px" }}>
                           {expandedSubcategory === `${category}-${subcategory}` ? (
                             <ArrowUpNarrowWide size={20} />
                           ) : (
@@ -649,11 +750,24 @@ const App = () => {
                           {workspaces.map((workspace) =>
                             subcategory === workspace.name && userResponses?.cabinFlooring === "Customize" ? (
                               workspace.type.map((workspaceType, index) => (
-                                <div key={index} className={`${workspace.name.toLowerCase()}-category`}>
+                                <div
+                                  key={index}
+                                  className={`${workspace.name.toLowerCase()}-category`}
+                                >
+                                  {/* Display the disclaimer if the workspaceType is 'Reception' or 'Lounge' */}
+                                  {["Reception", "Lounge"].includes(workspaceType) && (
+                                    <div className="disclaimer">
+                                      <p style={{ color: "red", fontStyle: "italic" }} className='text-sm'>
+                                        Choose "Tile" only. Carpet and Vinyl are not recommended for this area.
+                                      </p>
+                                    </div>
+                                  )}
                                   <h4 className="text-md font-bold">{workspaceType}</h4>
                                   <div className={`${workspace.name.toLowerCase()}-products`}>
                                     {renderCards(
-                                      products.filter((product) => product.subcategory === workspace.name),
+                                      products.filter(
+                                        (product) => product.subcategory === workspace.name
+                                      ),
                                       workspaceType,
                                       category
                                     )}
@@ -663,7 +777,8 @@ const App = () => {
                             ) : null
                           )}
                           {/* Render default content if no specific category match */}
-                          {!(userResponses?.cabinFlooring === "Customize") && renderCards(products, subcategory, category)}
+                          {!(userResponses?.cabinFlooring === "Customize") &&
+                            renderCards(products, subcategory, category)}
                         </div>
                       )}
                     </div>
@@ -678,6 +793,7 @@ const App = () => {
         <QuestionModal
           subcategory={expandedSubcategory}
           cabinsQuestions={cabinsQuestions}
+          category={category}
           // onClose={closeQuestionModal}
           onSubmit={handleQuestionSubmit}
           initialAnswers={userResponses[expandedSubcategory]} // Pass previous responses

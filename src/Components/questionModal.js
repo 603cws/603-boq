@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 
-const QuestionModal = ({ onClose, onSubmit,cabinsQuestions }) => {
-  
-  const initialQuestions = [
+const QuestionModal = ({ onClose, onSubmit,cabinsQuestions, category }) => {
+  // console.log("category in modal",category)
+  const flooringQuestions = [
     {
       name: "flooringStatus",
       label: "What is the flooring status?",
@@ -23,29 +23,47 @@ const QuestionModal = ({ onClose, onSubmit,cabinsQuestions }) => {
   const cabinRelatedQuestions = [
     {
       name: "cabinFlooring",
-      label: "Do you want same tile/carpet for all cabins or different for each cabin?",
+      label: "Do you want same tile/carpet for all rooms or different for each room?",
       options: [
         { value: "Same", label: "Same" },
         { value: "Customize", label: "Customize" },
       ],
     },
   ];
+  const hvacQuestions = [
+    {
+      name: "hvacType",
+      label: "Do you want full centralized AC or a combination?",
+      options: [
+        { value: "Centralized", label: "Centralized" },
+        { value: "Combination", label: "Combination" },
+      ],
+    },
+  ];
 
-  const [questions, setQuestions] = useState(initialQuestions);
+  const [questions, setQuestions] = useState(flooringQuestions);
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // Load answers from localStorage when the component mounts
   useEffect(() => {
+    // Load answers from localStorage when the component mounts
     const savedAnswers = localStorage.getItem("answers");
     if (savedAnswers) {
       setAnswers(JSON.parse(savedAnswers));
     }
+    // If cabinsQuestions is available, it will set the questions (keep this part unchanged)
     if (cabinsQuestions) {
-      setQuestions((cabinRelatedQuestions) )
+      setQuestions(cabinRelatedQuestions);
     }
-  }, [cabinsQuestions]);
-
+    // Set questions based on category
+    if (category === "Flooring") {
+      setQuestions(flooringQuestions); // Flooring related questions
+    } else if (category === "HVAC") {
+      setQuestions(hvacQuestions); // HVAC related questions
+    }
+  }, [cabinsQuestions, category]); // Ensure that the effect runs when either cabinsQuestions or category changes
+  
   // Handle input changes and update answers state
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -61,11 +79,10 @@ const QuestionModal = ({ onClose, onSubmit,cabinsQuestions }) => {
 
     localStorage.setItem("answers", JSON.stringify(updatedAnswers));
 
-    if (name === "flooringArea" && value === "allArea") {
+    if (name === "flooringArea" && value === "allArea" ) {
       const flooringTypeExists = questions.some(
         (q) => q.name === "flooringType"
       );
-
       if (!flooringTypeExists) {
         const updatedQuestions = [
           ...questions,
@@ -79,10 +96,29 @@ const QuestionModal = ({ onClose, onSubmit,cabinsQuestions }) => {
             ],
           },
         ];
-
         setQuestions(updatedQuestions);
       }
     }
+      else if ( name === "hvacType" && value === "Centralized"){
+        const hvacCombExists = questions.some(
+          (q) => q.name === "hvacCentralized"
+        );
+      if (!hvacCombExists){
+        const updatedQuestions = [
+          ...questions,
+          {
+            name: "hvacCentralized",
+            label: "Select HVAC model:",
+            options: [
+              {value : "Fully covered" , label : "Fully covered split AC"},
+              {value : "fullOfficeVRV" , label : "Full office VRV"},
+            ]
+          }
+        ]
+        setQuestions(updatedQuestions);
+      }
+    }
+    
   };
 
   const handleFormSubmit = (e) => {

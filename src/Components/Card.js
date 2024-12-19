@@ -8,7 +8,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
     const [isMinimized, setIsMinimized] = useState(initialMinimized);
     const [selectedAddOns, setSelectedAddOns] = useState({});
     const [showModal, setShowModal] = useState(false);
-
+    console.log("selected addons", selectedAddOns)
     const colorOptions = product_variants
         .filter(variant => variant.image)  // Filter out variants with null or undefined images
         .map(variant => ({
@@ -60,6 +60,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
                         addon_price: variant.price || "No Price", // Store the price of the add-on
                         addon_image: variant.image || "No Image", // Store the image of the add-on
                         addonId: variant.addonid || "No Id",
+                        variantID: variant.id || "No Id",
                     }
                 };
             } else {
@@ -248,7 +249,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
             </>
         );
     }
-    
+
     // const handleAddToCartClick = () => {
     //   const cartItem = {
     //     title: selectedTitle,
@@ -298,7 +299,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
                         />
                     ))}
                 </div>
-                
+
             </CardSection>
             {showModal && (
                 <Modal
@@ -314,8 +315,8 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
                     calculateTotalPrice={calculateTotalPrice}
                     handleDoneClick={handleDoneClick}
                     category={category}
-                    onClose={() => setShowModal(false)} 
-                    />
+                    onClose={() => setShowModal(false)}
+                />
             )}
 
             <CardSection className="card-features">

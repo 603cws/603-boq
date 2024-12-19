@@ -607,6 +607,9 @@ h1, h2, h3, h4, h5, h6 {
   color: #1a202c;
 }
 
+.GoToLayout-btn ,.SaveBoq-btn{
+  border: 1px solid rgb(64, 148, 245) !important;
+}
 
 /* Category Section */
 .category-section {
