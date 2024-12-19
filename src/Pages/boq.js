@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Skeleton } from '@mui/material'; // Select, MenuItem, Button, Slider
+import { Skeleton, Button } from '@mui/material'; // Select, MenuItem, Button, Slider
 import { supabase } from '../supabase';
 import RoomDataBox from '../RoomDataBox';
 import './boq.css';
@@ -298,8 +298,6 @@ const App = () => {
       setIsSaving(false);
     }
   };
-
-
 
   useEffect(() => {
     Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces()]);
@@ -606,7 +604,14 @@ const App = () => {
 
   return (
     <div className="App">
-
+      <div className='px-3 flex justify-between'>
+        <Button href='https://603-layout.vercel.app/' className='GoToLayout-btn'>
+          <ArrowLeftFromLine />Go to Layout
+        </Button>
+        <Button className='SaveBoq-btn' onClick={() => handleSaveBOQ(selectedData)}>Save BOQ
+          <ArrowRightFromLine />
+        </Button>
+      </div>
       <Filters
         searchQuery={searchQuery}
         handleSearch={handleSearch}
