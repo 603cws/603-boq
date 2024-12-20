@@ -124,6 +124,20 @@ const App = () => {
           videorecordingroom: latestRoomData.videorecordingroom,
           breakoutroom: latestRoomData.breakoutroom,
           executivewashroom: latestRoomData.executivewashroom,
+
+          openworkspaces: latestRoomData.linear + latestRoomData.ltype,
+          cabins: latestRoomData.md + latestRoomData.manager + latestRoomData.small,
+          meetingrooms: latestRoomData.discussionroom + latestRoomData.interviewroom + latestRoomData.conferenceroom +
+            latestRoomData.boardroom + latestRoomData.meetingroom + latestRoomData.meetingroomlarge + latestRoomData.hrroom +
+            latestRoomData.financeroom + latestRoomData.sales + latestRoomData.videorecordingroom,
+          publicspaces: latestRoomData.reception + latestRoomData.lounge + latestRoomData.phonebooth + latestRoomData.breakoutroom,
+          supportspaces: latestRoomData.ups + latestRoomData.bms + latestRoomData.server + latestRoomData.other + latestRoomData.executivewashroom,
+
+          allareas: latestRoomData.linear + latestRoomData.ltype + latestRoomData.md + latestRoomData.manager + latestRoomData.small +
+            latestRoomData.discussionroom + latestRoomData.interviewroom + latestRoomData.conferenceroom + latestRoomData.boardroom +
+            latestRoomData.meetingroom + latestRoomData.meetingroomlarge + latestRoomData.hrroom + latestRoomData.financeroom +
+            latestRoomData.sales + latestRoomData.videorecordingroom + latestRoomData.reception + latestRoomData.lounge + latestRoomData.phonebooth +
+            latestRoomData.breakoutroom + latestRoomData.ups + latestRoomData.bms + latestRoomData.server + latestRoomData.other + latestRoomData.executivewashroom,
         };
         setRoomNumbers([roomsArray]);
       }
@@ -302,6 +316,8 @@ const App = () => {
   //   }
   // };
 
+  const userID = 'ecc4de0e-ea4a-4537-b659-d58a8852f07b'
+
   useEffect(() => {
     Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces()]);
   }, []);
@@ -472,11 +488,18 @@ const App = () => {
     const workspaceNames = workspaces.map(workspace => workspace.name);
 
     if (categoriesWithModal.includes(category) && workspaceNames.includes(subcategory)) {
-      if (category !== "HVAC") {
-        setCabinsQuestions(workspaceNames.includes(subcategory));
-        setShowQuestionModal(true);
-        setExpandedSubcategory(`${category}-${subcategory}`);
-      }
+      console.log("Category and subcategory matched:");
+      console.log("Category:", category);
+      console.log("Subcategory:", subcategory);
+      console.log("Workspace Names:", workspaceNames);
+
+      const isWorkspaceName = workspaceNames.includes(subcategory);
+      console.log("Is Workspace Name:", isWorkspaceName);
+
+      setCabinsQuestions(isWorkspaceName);
+      setShowQuestionModal(true);
+      setExpandedSubcategory(`${category}-${subcategory}`);
+
       return;
     }
   };
@@ -591,6 +614,14 @@ const App = () => {
 
   return (
     <div className="App">
+      <div className='px-3 flex justify-between'>
+        <Button href='https://603-layout.vercel.app/' className='GoToLayout-btn'>
+          <ArrowLeftFromLine />Go to Layout
+        </Button>
+        <Button className='SaveBoq-btn' /*onClick={() => handleSaveBOQ(selectedData)}*/>Save BOQ
+          <ArrowRightFromLine />
+        </Button>
+      </div>
       <Filters
         searchQuery={searchQuery}
         handleSearch={handleSearch}
@@ -739,7 +770,7 @@ const App = () => {
                                   className={`${workspace.name.toLowerCase()}-category`}
                                 >
                                   {/* Display the disclaimer if the workspaceType is 'Reception' or 'Lounge' */}
-                                  {["Reception", "Lounge"].includes(workspaceType) && (
+                                  {category === "Flooring" && ["Reception", "Lounge"].includes(workspaceType) && (
                                     <div className="disclaimer">
                                       <p style={{ color: "red", fontStyle: "italic" }} className='text-sm'>
                                         Choose "Tile" only. Carpet and Vinyl are not recommended for this area.
@@ -749,9 +780,10 @@ const App = () => {
                                   <h4 className="text-md font-bold">{workspaceType}</h4>
                                   <div className={`${workspace.name.toLowerCase()}-products`}>
                                     {renderCards(
-                                      products.filter(
-                                        (product) => product.subcategory === workspace.name
-                                      ),
+                                      products.filter((product) => {
+                                        const subcategories = product.subcategory.split(",").map((sub) => sub.trim());
+                                        return subcategories.includes(workspace.name);
+                                      }),
                                       workspaceType,
                                       category
                                     )}
@@ -762,7 +794,10 @@ const App = () => {
                           )}
                           {/* Render default content if no specific category match */}
                           {!(userResponses?.cabinFlooring === "Customize") &&
-                            renderCards(products, subcategory, category)}
+                            renderCards(products.filter((product) => {
+                              const subcategories = product.subcategory.split(",").map((sub) => sub.trim());
+                              return subcategories.includes(subcategory);
+                            }), subcategory, category)}
                         </div>
                       )}
                     </div>

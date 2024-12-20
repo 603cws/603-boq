@@ -9,7 +9,7 @@ export const calculateTotalPriceHelper = (roomNumbersMap, areasData, category, s
 
     let matchedKey, quantity;
 
-    if (category === "Furniture") {
+    if (category === "Furniture" || category === "HVAC") {
         // Calculation of price * quantity
         matchedKey = Object.keys(roomNumbersMap || {}).find((key) =>
             normalizedSubCat.includes(key.toLowerCase())
