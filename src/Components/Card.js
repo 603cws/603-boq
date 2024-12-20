@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Modal from './Modal';
 import './Card.css'
+import { calculateTotalPriceHelper } from "../Utils/CalculateTotalPriceHelper";
 
 const Card = ({ price, product_variants = [], addOns, initialMinimized = true, roomData, quantity, onAddToCart, data, subCat, onDone,
     addon_variants = [], setPrice, selectedData, setSelectedData, product, category, areasData, totalBOQCost }) => {
@@ -76,19 +77,9 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
             (total, addOn) => total + (addOn.addon_price || 0),
             0
         );
-        const normalizedSubCat = subCat.toLowerCase().replace(/[^a-z0-9]/g, '');
-        let matchedKey, quantity;
-        if (category === "Furniture") {     //calculation of price * quantity
-            matchedKey = Object.keys(data).find((key) =>
-                normalizedSubCat.includes(key.toLowerCase())
-            );
-            quantity = matchedKey ? data[matchedKey] : 1;
-        } else {                            //calculation of price * area
-            matchedKey = Object.keys(areasData).find((key) =>
-                normalizedSubCat.includes(key.toLowerCase())
-            );
-            quantity = matchedKey ? areasData[matchedKey] : 1;
-        }
+
+        const quantity = calculateTotalPriceHelper(data, areasData, category, subCat);
+
         return (quantity || 0) * (selectedPrice + totalAddOnPrice);
     }, [selectedAddOns, selectedPrice, data, subCat, areasData, category]);
 
@@ -157,15 +148,17 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
         }
     };
 
-    const handleStartClick = (subCat, productID) => {
+    const handleStartClick = (category, subCat, productID) => {
         // clearSelectedData();
-        const priceValue = Number(price[subCat]); // Ensure it's a number
+        const key = `${category}-${subCat}`;
+
+        const priceValue = Number(price[key]); // Ensure it's a number
         const totalPrice = Number(calculateTotalPrice); // Ensure it's a number
 
         if (priceValue - totalPrice > -1) {
-            setPrice(subCat, -totalPrice);
+            setPrice(key, -totalPrice);
         } else {
-            setPrice(subCat, 0);
+            setPrice(key, 0);
         }
         toggleMinimize();
         setSelectedProductId(productID);
@@ -274,7 +267,9 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
 
     const handleDoneClick = () => {
         onDone(calculateTotalPrice); // Pass the total price to the parent
-        setPrice(subCat, calculateTotalPrice);
+        const key = `${category}-${subCat}`;
+
+        setPrice(key, calculateTotalPrice);
         toggleMinimize();
         handelSelectedData();
         setShowModal(false);

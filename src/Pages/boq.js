@@ -12,6 +12,7 @@ import Card from '../Components/Card';
 import QuestionModal from '../Components/questionModal';
 import PDFGenerator from "../Components/PDFGenerator";
 import Filters from "../Components/Filters";
+import { calculateTotalPriceHelper } from "../Utils/CalculateTotalPriceHelper";
 
 const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,7 +47,9 @@ const App = () => {
     'Flooring',
     'Accessories'
   ];
-  console.log("selected data", selectedData)
+
+  console.log("selected data", selectedData);
+
   async function fetchWorkspaces() {
     try {
       const { data: workspacesData, error: workspacesError } = await supabase
@@ -231,77 +234,78 @@ const App = () => {
     }
   }
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState(null);
+  // const [isSaving, setIsSaving] = useState(false);
+  // const [error, setError] = useState(null);
 
   // Function to handle saving data to Supabase
-  const handleSaveBOQ = async (selectedData) => {
-    console.log("Selected data in save BOQ:", selectedData);
+  // const handleSaveBOQ = async (selectedData) => {
+  //   console.log("Selected data in save BOQ:", selectedData);
 
-    try {
-      setIsSaving(true);
-      setError(null);
+  //   try {
+  //     setIsSaving(true);
+  //     setError(null);
 
-      // Initialize arrays to collect comma-separated values
-      const product_ids = [];
-      const product_variant_ids = [];
-      const addon_ids = [];
-      const addon_variant_ids = [];
+  //     // Initialize arrays to collect comma-separated values
+  //     const product_ids = [];
+  //     const product_variant_ids = [];
+  //     const addon_ids = [];
+  //     const addon_variant_ids = [];
 
-      // Ensure selectedData is an array and process each product
-      (Array.isArray(selectedData) ? selectedData : []).forEach((product) => {
-        // Add product ID
-        if (product.id) product_ids.push(product.id);
+  //     // Ensure selectedData is an array and process each product
+  //     (Array.isArray(selectedData) ? selectedData : []).forEach((product) => {
+  //       // Add product ID
+  //       if (product.id) product_ids.push(product.id);
 
-        // Add product variant ID
-        if (product.product_variant?.variant_id) {
-          product_variant_ids.push(product.product_variant.variant_id);
-        }
+  //       // Add product variant ID
+  //       if (product.product_variant?.variant_id) {
+  //         product_variant_ids.push(product.product_variant.variant_id);
+  //       }
 
-        // Process addons and extract addonId and variantID
-        Object.keys(product.addons || {}).forEach((addonKey) => {
-          const addon = product.addons[addonKey];
-          if (addon.addonId) addon_ids.push(addon.addonId); // Extract addonId
-          if (addon.variantID) addon_variant_ids.push(addon.variantID); // Extract variantID
-        });
-      });
+  //       // Process addons and extract addonId and variantID
+  //       Object.keys(product.addons || {}).forEach((addonKey) => {
+  //         const addon = product.addons[addonKey];
+  //         if (addon.addonId) addon_ids.push(addon.addonId); // Extract addonId
+  //         if (addon.variantID) addon_variant_ids.push(addon.variantID); // Extract variantID
+  //       });
+  //     });
 
-      // Join the arrays into comma-separated strings
-      const product_id_str = product_ids.join(',');
-      const product_variant_id_str = product_variant_ids.join(',');
-      const addon_id_str = addon_ids.join(',');
-      const addon_variant_id_str = addon_variant_ids.join(',');
+  //     // Join the arrays into comma-separated strings
+  //     const product_id_str = product_ids.join(',');
+  //     const product_variant_id_str = product_variant_ids.join(',');
+  //     const addon_id_str = addon_ids.join(',');
+  //     const addon_variant_id_str = addon_variant_ids.join(',');
 
-      // Create a single row object
-      const formattedData = {
-        product_id: product_id_str,
-        product_variant_id: product_variant_id_str,
-        addon_id: addon_id_str,
-        addon_variant_id: addon_variant_id_str,
-      };
+  //     // Create a single row object
+  //     const formattedData = {
+  //       product_id: product_id_str,
+  //       product_variant_id: product_variant_id_str,
+  //       addon_id: addon_id_str,
+  //       addon_variant_id: addon_variant_id_str,
+  //     };
 
-      console.log("Formatted data:", formattedData);
+  //     console.log("Formatted data:", formattedData);
 
-      // Insert a single row into Supabase
-      const { data, error } = await supabase.from('boqdata').insert([formattedData]);
+  //     // Insert a single row into Supabase
+  //     const { data, error } = await supabase.from('boqdata').insert([formattedData]);
 
-      if (error) {
-        console.error("Error saving BOQ:", error);
-        throw error;
-      }
+  //     if (error) {
+  //       console.error("Error saving BOQ:", error);
+  //       throw error;
+  //     }
 
-      console.log("Data saved successfully:", formattedData);
-    } catch (err) {
-      console.error("Error saving BOQ:", err);
-      setError("There was an error saving the BOQ. Please try again.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  //     console.log("Data saved successfully:", formattedData);
+  //   } catch (err) {
+  //     console.error("Error saving BOQ:", err);
+  //     setError("There was an error saving the BOQ. Please try again.");
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
   useEffect(() => {
     Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces()]);
   }, []);
+
   useEffect(() => {
     const savedData = localStorage.getItem('selectedData');
 
@@ -412,10 +416,6 @@ const App = () => {
     }
   };
 
-  const closeQuestionModal = () => {
-    setShowQuestionModal(false);
-  };
-
   useEffect(() => {
     let savedAnswers = localStorage.getItem("answers");
     savedAnswers = JSON.parse(savedAnswers);
@@ -472,7 +472,7 @@ const App = () => {
     const workspaceNames = workspaces.map(workspace => workspace.name);
 
     if (categoriesWithModal.includes(category) && workspaceNames.includes(subcategory)) {
-      if (category != "HVAC") {
+      if (category !== "HVAC") {
         setCabinsQuestions(workspaceNames.includes(subcategory));
         setShowQuestionModal(true);
         setExpandedSubcategory(`${category}-${subcategory}`);
@@ -483,15 +483,17 @@ const App = () => {
 
   useEffect(() => {
     if (expandedSubcategory !== null || expandedSubcategory !== undefined) {
-      handleCardClick(subCat);
+      handleCardClick(category, subCat);
     }
   }, [expandedSubcategory]);
 
-  const handlePrice = (subCat, value) => {
+  const handlePrice = (category, subCat, value) => {
     setPrice((prevPrices) => {
+      const key = `${category}-${subCat}`;
+
       const updatedPrices = {
         ...prevPrices,
-        [subCat]: Math.max(0, (prevPrices[subCat] || 0) + value), // Ensure price doesn't go below 0
+        [key]: Math.max(0, (prevPrices[key] || 0) + value), // Ensure price doesn't go below 0
       };
 
       // Update the BOQ Total
@@ -500,11 +502,6 @@ const App = () => {
 
       return updatedPrices; // Ensure the new state is returned
     });
-  };
-
-  // Normalize function for consistent comparison
-  const normalizeKey = (key) => {
-    return (key || "").toLowerCase().replace(/[^a-z0-9]/g, '');
   };
 
   // Update price state whenever selectedData or roomNumbers change
@@ -519,20 +516,9 @@ const App = () => {
       return data.reduce((acc, item) => {
         const category = item?.category || "Unknown";
         const subcategory = item?.subcategory || "Unknown";
-        const normalizedSubCat = normalizeKey(subcategory); // Normalize the subcategory name
 
-        let matchedKey, quantity;
-        if (category === "Furniture") {     //calculation of price * quantity
-          matchedKey = Object.keys(roomNumbersMap).find((key) =>
-            normalizedSubCat.includes(key.toLowerCase())
-          );
-          quantity = matchedKey ? roomNumbersMap[matchedKey] : 1;
-        } else {                            //calculation of price * area
-          matchedKey = Object.keys(areasData).find((key) =>
-            normalizedSubCat.includes(key.toLowerCase())
-          );
-          quantity = matchedKey ? areasData[matchedKey] : 1;
-        }
+        // Call the CalculateTotalPriceHelper component
+        const quantity = calculateTotalPriceHelper(roomNumbersMap, areasData, category, subcategory);
 
         const variantPrice = item?.product_variant?.variant_price || 0;
 
@@ -542,12 +528,14 @@ const App = () => {
           return sum + addonPrice;
         }, 0);
 
-        if (!acc[subcategory]) {
-          acc[subcategory] = 0;
+        const key = `${category}-${subcategory}`;
+
+        if (!acc[key]) {
+          acc[key] = 0;
         }
 
         // Multiply total price by quantity
-        acc[subcategory] += (variantPrice + addonPrice) * quantity;
+        acc[key] += (variantPrice + addonPrice) * quantity;
 
         return acc;
       }, {});
@@ -561,11 +549,11 @@ const App = () => {
     }
   }, [selectedData, roomNumbers, roomAreas]);
 
-  const handleCardClick = (subcategory) => {
+  const handleCardClick = (category, subcategory) => {
     console.log("Card clicked!");
     setPrice((prevPrice) => ({
       ...prevPrice,
-      [subcategory]: 0,
+      [`${category}-${subcategory}`]: 0, // Use template literals to create the key
     }));
   };
 
@@ -592,7 +580,6 @@ const App = () => {
           selectedData={selectedData}
           setSelectedData={setSelectedData}
           product={product}
-          categories={categories}
           groupedProducts={groupedProducts}
           category={category}
           totalBOQCost={totalBOQCost}
@@ -604,14 +591,6 @@ const App = () => {
 
   return (
     <div className="App">
-      <div className='px-3 flex justify-between'>
-        <Button href='https://603-layout.vercel.app/' className='GoToLayout-btn'>
-          <ArrowLeftFromLine />Go to Layout
-        </Button>
-        <Button className='SaveBoq-btn' onClick={() => handleSaveBOQ(selectedData)}>Save BOQ
-          <ArrowRightFromLine />
-        </Button>
-      </div>
       <Filters
         searchQuery={searchQuery}
         handleSearch={handleSearch}
@@ -624,8 +603,8 @@ const App = () => {
         categories={categories}
       />
 
-      {roomNumbers.length > 0 && (
-        <RoomDataBox roomData={Object.fromEntries(Object.entries(roomNumbers[0]).filter(([_, value]) => value > 0))} />
+      {roomNumbers.length > 0 && roomNumbers && roomNumbers[0] && (
+        <RoomDataBox roomData={roomNumbers[0] && Object.fromEntries(Object.entries(roomNumbers[0]).filter(([_, value]) => value > 0))} />
       )}
 
       <div className="products-grid">
@@ -638,8 +617,8 @@ const App = () => {
               <Skeleton variant="text" width="50%" height={20} style={{ margin: '5px 0' }} />
             </div>
           ))
-        ) : (
-          Object.entries(groupedProducts).map(([category, subcategories]) => (
+        ) : groupedProducts && Object.entries(groupedProducts).length > 0 ? (
+          Object.entries(groupedProducts || {}).map(([category, subcategories]) => (
             <div key={category} className="category-section">
               <h2 onClick={() => handleCategoryClick(category)}>{category}</h2>
 
@@ -740,7 +719,7 @@ const App = () => {
                       >
                         <h3 style={{ margin: 0 }}>{subcategory}</h3>
                         <h6 className="text-xs" style={{ margin: "0 10px" }}>
-                          Total Cost of {subcategory}: ₹ {price[subcategory] || 0}
+                          Total Cost of {subcategory}: ₹ {price[`${category}-${subcategory}`] || 0}
                         </h6>
                         <span style={{ marginLeft: "50px" }}>
                           {expandedSubcategory === `${category}-${subcategory}` ? (
@@ -791,6 +770,8 @@ const App = () => {
               )}
             </div>
           ))
+        ) : (
+          <div>No products available</div>
         )}
       </div>
 
@@ -799,7 +780,6 @@ const App = () => {
           subcategory={expandedSubcategory}
           cabinsQuestions={cabinsQuestions}
           category={category}
-          // onClose={closeQuestionModal}
           onSubmit={handleQuestionSubmit}
           initialAnswers={userResponses[expandedSubcategory]} // Pass previous responses
           onClose={() => {
