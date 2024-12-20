@@ -3,16 +3,15 @@ import { Skeleton, Button } from '@mui/material'; // Select, MenuItem, Button, S
 import { supabase } from '../supabase';
 import RoomDataBox from '../RoomDataBox';
 import './boq.css';
-// import Cart from './Cart';
+// import Cart from './Cart';   // import jsPDF from "jspdf";   // import "jspdf-autotable";
 import { ArrowDownNarrowWide, ArrowLeftFromLine, ArrowRightFromLine, ArrowUpNarrowWide } from 'lucide-react';
-// import jsPDF from "jspdf";
 import '../Components/Modal'
-// import "jspdf-autotable";
 import Card from '../Components/Card';
 import QuestionModal from '../Components/questionModal';
 import PDFGenerator from "../Components/PDFGenerator";
 import Filters from "../Components/Filters";
 import { calculateTotalPriceHelper } from "../Utils/CalculateTotalPriceHelper";
+import processData from '../Utils/dataProcessor';
 
 const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,6 +33,7 @@ const App = () => {
   const [cabinsQuestions, setCabinsQuestions] = useState(false);
   const [category, setCategory] = useState('');
   const categoriesWithModal = ['Flooring', 'HVAC'];   // Array of categories that should show the modal when clicked
+  const userID = 'ecc4de0e-ea4a-4537-b659-d58a8852f07b'
 
   const categories = [
     'Furniture',
@@ -99,92 +99,18 @@ const App = () => {
 
       // Process the data for 'quantity'
       if (quantityData && quantityData.length > 0) {
-        const latestRoomData = quantityData[0];
-        const roomsArray = {
-          linear: latestRoomData.linear,
-          ltype: latestRoomData.ltype,
-          md: latestRoomData.md,
-          manager: latestRoomData.manager,
-          small: latestRoomData.small,
-          ups: latestRoomData.ups,
-          bms: latestRoomData.bms,
-          server: latestRoomData.server,
-          reception: latestRoomData.reception,
-          lounge: latestRoomData.lounge,
-          sales: latestRoomData.sales,
-          phonebooth: latestRoomData.phonebooth,
-          discussionroom: latestRoomData.discussionroom,
-          interviewroom: latestRoomData.interviewroom,
-          conferenceroom: latestRoomData.conferenceroom,
-          boardroom: latestRoomData.boardroom,
-          meetingroom: latestRoomData.meetingroom,
-          meetingroomlarge: latestRoomData.meetingroomlarge,
-          hrroom: latestRoomData.hrroom,
-          financeroom: latestRoomData.financeroom,
-          videorecordingroom: latestRoomData.videorecordingroom,
-          breakoutroom: latestRoomData.breakoutroom,
-          executivewashroom: latestRoomData.executivewashroom,
-
-          openworkspaces: latestRoomData.linear + latestRoomData.ltype,
-          cabins: latestRoomData.md + latestRoomData.manager + latestRoomData.small,
-          meetingrooms: latestRoomData.discussionroom + latestRoomData.interviewroom + latestRoomData.conferenceroom +
-            latestRoomData.boardroom + latestRoomData.meetingroom + latestRoomData.meetingroomlarge + latestRoomData.hrroom +
-            latestRoomData.financeroom + latestRoomData.sales + latestRoomData.videorecordingroom,
-          publicspaces: latestRoomData.reception + latestRoomData.lounge + latestRoomData.phonebooth + latestRoomData.breakoutroom,
-          supportspaces: latestRoomData.ups + latestRoomData.bms + latestRoomData.server + latestRoomData.other + latestRoomData.executivewashroom,
-
-          allareas: latestRoomData.linear + latestRoomData.ltype + latestRoomData.md + latestRoomData.manager + latestRoomData.small +
-            latestRoomData.discussionroom + latestRoomData.interviewroom + latestRoomData.conferenceroom + latestRoomData.boardroom +
-            latestRoomData.meetingroom + latestRoomData.meetingroomlarge + latestRoomData.hrroom + latestRoomData.financeroom +
-            latestRoomData.sales + latestRoomData.videorecordingroom + latestRoomData.reception + latestRoomData.lounge + latestRoomData.phonebooth +
-            latestRoomData.breakoutroom + latestRoomData.ups + latestRoomData.bms + latestRoomData.server + latestRoomData.other + latestRoomData.executivewashroom,
-        };
-        setRoomNumbers([roomsArray]);
+        const processedQuantityData = processData(quantityData, "quantity");
+        if (processedQuantityData) {
+          setRoomNumbers([processedQuantityData]);
+        }
       }
 
       // Process the data for 'areas'
       if (areasData && areasData.length > 0) {
-        const latestAreaData = areasData[0];
-        const areasArray = {
-          linear: latestAreaData.linear,
-          ltype: latestAreaData.ltype,
-          manager: latestAreaData.manager,
-          small: latestAreaData.small,
-          ups: latestAreaData.ups,
-          bms: latestAreaData.bms,
-          server: latestAreaData.server,
-          reception: latestAreaData.reception,
-          lounge: latestAreaData.lounge,
-          sales: latestAreaData.sales,
-          phonebooth: latestAreaData.phonebooth,
-          discussionroom: latestAreaData.discussionroom,
-          interviewroom: latestAreaData.interviewroom,
-          conferenceroom: latestAreaData.conferenceroom,
-          boardroom: latestAreaData.boardroom,
-          meetingroom: latestAreaData.meetingroom,
-          meetingroomlarge: latestAreaData.meetingroomlarge,
-          hrroom: latestAreaData.hrroom,
-          financeroom: latestAreaData.financeroom,
-          videorecordingroom: latestAreaData.videorecordingroom,
-          breakoutroom: latestAreaData.breakoutroom,
-          executivewashroom: latestAreaData.executivewashroom,
-          totalArea: latestAreaData.totalArea,
-
-          openworkspaces: latestAreaData.linear + latestAreaData.ltype,
-          cabins: latestAreaData.md + latestAreaData.manager + latestAreaData.small,
-          meetingrooms: latestAreaData.discussionroom + latestAreaData.interviewroom + latestAreaData.conferenceroom +
-            latestAreaData.boardroom + latestAreaData.meetingroom + latestAreaData.meetingroomlarge + latestAreaData.hrroom +
-            latestAreaData.financeroom + latestAreaData.sales + latestAreaData.videorecordingroom,
-          publicspaces: latestAreaData.reception + latestAreaData.lounge + latestAreaData.phonebooth + latestAreaData.breakoutroom,
-          supportspaces: latestAreaData.ups + latestAreaData.bms + latestAreaData.server + latestAreaData.other + latestAreaData.executivewashroom,
-
-          allareas: latestAreaData.linear + latestAreaData.ltype + latestAreaData.md + latestAreaData.manager + latestAreaData.small +
-            latestAreaData.discussionroom + latestAreaData.interviewroom + latestAreaData.conferenceroom + latestAreaData.boardroom +
-            latestAreaData.meetingroom + latestAreaData.meetingroomlarge + latestAreaData.hrroom + latestAreaData.financeroom +
-            latestAreaData.sales + latestAreaData.videorecordingroom + latestAreaData.reception + latestAreaData.lounge + latestAreaData.phonebooth +
-            latestAreaData.breakoutroom + latestAreaData.ups + latestAreaData.bms + latestAreaData.server + latestAreaData.other + latestAreaData.executivewashroom,
-        };
-        setRoomAreas([areasArray]);
+        const processedAreasData = processData(areasData, "areas");
+        if (processedAreasData) {
+          setRoomAreas([processedAreasData]);
+        }
       }
     } catch (error) {
       console.error('Error fetching room data:', error);
@@ -316,8 +242,6 @@ const App = () => {
   //   }
   // };
 
-  const userID = 'ecc4de0e-ea4a-4537-b659-d58a8852f07b'
-
   useEffect(() => {
     Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces()]);
   }, []);
@@ -414,7 +338,6 @@ const App = () => {
 
     return grouped;
   }, [filteredProducts]);
-
 
   // const toggleCart = () => {
   //   setOpen(true);
@@ -622,17 +545,9 @@ const App = () => {
           <ArrowRightFromLine />
         </Button>
       </div>
-      <Filters
-        searchQuery={searchQuery}
-        handleSearch={handleSearch}
-        priceRange={priceRange}
-        handleSliderChange={handleSliderChange}
-        toggleFilters={toggleFilters}
-        showFilters={showFilters}
-        selectedCategory={selectedCategory}
-        handleCategoryChange={handleCategoryChange}
-        categories={categories}
-      />
+      <Filters searchQuery={searchQuery} handleSearch={handleSearch} priceRange={priceRange} handleSliderChange={handleSliderChange}
+        toggleFilters={toggleFilters} showFilters={showFilters} selectedCategory={selectedCategory}
+        handleCategoryChange={handleCategoryChange} categories={categories} />
 
       {roomNumbers.length > 0 && roomNumbers && roomNumbers[0] && (
         <RoomDataBox roomData={roomNumbers[0] && Object.fromEntries(Object.entries(roomNumbers[0]).filter(([_, value]) => value > 0))} />
@@ -662,10 +577,9 @@ const App = () => {
                       <h3>Showing products for: {userResponses.flooringType}</h3>
                       <div className="subcategory-section">
                         {renderCards(
-                          productsData.filter(
-                            (product) =>
-                              product.subcategory === "All Areas" &&
-                              product.subcategory1 === userResponses.flooringType
+                          productsData.filter((product) =>
+                            product.subcategory === "All Areas" &&
+                            product.subcategory1 === userResponses.flooringType
                           ),
                           "All Areas"
                         )}
@@ -681,10 +595,9 @@ const App = () => {
                       <h3>Showing HVAC products for: {userResponses.hvacCentralized}</h3>
                       <div className="subcategory-section">
                         {renderCards(
-                          productsData.filter(
-                            (product) =>
-                              product.subcategory === "Centralized" &&
-                              product.subcategory1 === userResponses.hvacCentralized
+                          productsData.filter((product) =>
+                            product.subcategory === "Centralized" &&
+                            product.subcategory1 === userResponses.hvacCentralized
                           ),
                           "Centralized"
                         )}
@@ -741,13 +654,7 @@ const App = () => {
                           toggleSubcategory(category, subcategory); // Pass category and subcategory to the toggle function
                           setSubCat(subcategory);
                         }}
-                        style={{
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
+                        style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", }} >
                         <h3 style={{ margin: 0 }}>{subcategory}</h3>
                         <h6 className="text-xs" style={{ margin: "0 10px" }}>
                           Total Cost of {subcategory}: ₹ {price[`${category}-${subcategory}`] || 0}
@@ -811,12 +718,8 @@ const App = () => {
       </div>
 
       {showQuestionModal && (
-        <QuestionModal
-          subcategory={expandedSubcategory}
-          cabinsQuestions={cabinsQuestions}
-          category={category}
-          onSubmit={handleQuestionSubmit}
-          initialAnswers={userResponses[expandedSubcategory]} // Pass previous responses
+        <QuestionModal subcategory={expandedSubcategory} cabinsQuestions={cabinsQuestions} category={category}
+          onSubmit={handleQuestionSubmit} initialAnswers={userResponses[expandedSubcategory]} // Pass previous responses
           onClose={() => {
             setShowQuestionModal(false); // Close the modal
             setCabinsQuestions(false); // Reset questions state
@@ -827,14 +730,11 @@ const App = () => {
       {/* <Cart open={open} setOpen={setOpen} cartItems={cartItems} />       */}
       <div>
         {/* <button className='cart-icon fixed bottom-10 right-10 bg-black text-white rounded-xl ' onClick={toggleCart}><ShoppingCart size={40} /></button> */}
-        <h4 className='fixed right-10 bottom-2 bg-gray-300 px-3 rounded'>Total Cost: ₹
-          {totalBOQCost}
-        </h4>
+        <h4 className='fixed right-10 bottom-2 bg-gray-300 px-3 rounded'>Total Cost: ₹{totalBOQCost}</h4>
       </div>
       <div className='flex'>
-        <button onClick={() => PDFGenerator.generatePDF(selectedData)}
-          variant="contained"
-          color="primary" className='bg-blue-500 text-white font-semibold px-5 py-1.5 rounded-sm mb-2 hover:bg-green-500 m-auto'>Download BOQ</button>
+        <button onClick={() => PDFGenerator.generatePDF(selectedData)} variant="contained" color="primary"
+          className='bg-blue-500 text-white font-semibold px-5 py-1.5 rounded-sm mb-2 hover:bg-green-500 m-auto'>Download BOQ</button>
       </div>
     </div>
   );
