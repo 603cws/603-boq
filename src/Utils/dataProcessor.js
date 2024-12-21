@@ -4,7 +4,7 @@ const processData = (data, type) => {
     const latestData = data[0];
     const processedData = {
         linear: latestData.linear,
-        ltype: latestData.ltype,
+        ltype: latestData.lType,
         md: latestData.md,
         manager: latestData.manager,
         small: latestData.small,
@@ -14,70 +14,70 @@ const processData = (data, type) => {
         reception: latestData.reception,
         lounge: latestData.lounge,
         sales: latestData.sales,
-        phonebooth: latestData.phonebooth,
-        discussionroom: latestData.discussionroom,
-        interviewroom: latestData.interviewroom,
-        conferenceroom: latestData.conferenceroom,
-        boardroom: latestData.boardroom,
-        meetingroom: latestData.meetingroom,
-        meetingroomlarge: latestData.meetingroomlarge,
-        hrroom: latestData.hrroom,
-        financeroom: latestData.financeroom,
-        videorecordingroom: latestData.videorecordingroom,
-        breakoutroom: latestData.breakoutroom,
-        executivewashroom: latestData.executivewashroom,
+        phonebooth: latestData.phoneBooth,
+        discussionroom: latestData.discussionRoom,
+        interviewroom: latestData.interviewRoom,
+        conferenceroom: latestData.conferenceRoom,
+        boardroom: latestData.boardRoom,
+        meetingroom: latestData.meetingRoom,
+        meetingroomlarge: latestData.meetingRoomLarge,
+        hrroom: latestData.hrRoom,
+        financeroom: latestData.financeRoom,
+        videorecordingroom: latestData.videoRecordingRoom,
+        breakoutroom: latestData.breakoutRoom,
+        executivewashroom: latestData.executiveWashroom,
         totalArea: type === "areas" ? latestData.totalArea : undefined,
 
-        openworkspaces: latestData.linear + latestData.ltype,
+        openworkspaces: latestData.linear + latestData.lType,
         cabins: latestData.md + latestData.manager + latestData.small,
         meetingrooms:
-            latestData.discussionroom +
-            latestData.interviewroom +
-            latestData.conferenceroom +
-            latestData.boardroom +
-            latestData.meetingroom +
-            latestData.meetingroomlarge +
-            latestData.hrroom +
-            latestData.financeroom +
+            latestData.discussionRoom +
+            latestData.interviewRoom +
+            latestData.conferenceRoom +
+            latestData.boardRoom +
+            latestData.meetingRoom +
+            latestData.meetingRoomLarge +
+            latestData.hrRoom +
+            latestData.financeRoom +
             latestData.sales +
-            latestData.videorecordingroom,
+            latestData.videoRecordingRoom,
         publicspaces:
             latestData.reception +
             latestData.lounge +
-            latestData.phonebooth +
-            latestData.breakoutroom,
+            latestData.phoneBooth +
+            latestData.breakoutRoom,
         supportspaces:
             latestData.ups +
             latestData.bms +
             latestData.server +
             (latestData.other || 0) +
-            latestData.executivewashroom,
+            latestData.executiveWashroom,
 
         allareas:
             latestData.linear +
-            latestData.ltype +
+            latestData.lType +
             latestData.md +
             latestData.manager +
             latestData.small +
-            latestData.discussionroom +
-            latestData.interviewroom +
-            latestData.conferenceroom +
-            latestData.boardroom +
-            latestData.meetingroom +
-            latestData.meetingroomlarge +
-            latestData.hrroom +
-            latestData.financeroom +
+            latestData.discussionRoom +
+            latestData.interviewRoom +
+            latestData.conferenceRoom +
+            latestData.boardRoom +
+            latestData.meetingRoom +
+            latestData.meetingRoomLarge +
+            latestData.hrRoom +
+            latestData.financeRoom +
             latestData.sales +
-            latestData.videorecordingroom +
+            latestData.videoRecordingRoom +
             latestData.reception +
             latestData.lounge +
-            latestData.phonebooth +
-            latestData.breakoutroom +
+            latestData.phoneBooth +
+            latestData.breakoutRoom +
             latestData.ups +
             latestData.bms +
             latestData.server +
             (latestData.other || 0) +
-            latestData.executivewashroom,
+            latestData.executiveWashroom,
     };
 
     return processedData;
