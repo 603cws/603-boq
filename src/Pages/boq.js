@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Skeleton, Button } from '@mui/material'; // Select, MenuItem, Button, Slider
-import { supabase } from '../supabase';
+import { supabase } from '../services/supabase';
 import RoomDataBox from '../RoomDataBox';
-import './boq.css';
+import '../styles/boq.css';
 // import Cart from './Cart';   // import jsPDF from "jspdf";   // import "jspdf-autotable";
 import { ArrowDownNarrowWide, ArrowLeftFromLine, ArrowRightFromLine, ArrowUpNarrowWide } from 'lucide-react';
 import '../Components/Modal'

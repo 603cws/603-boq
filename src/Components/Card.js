@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Modal from './Modal';
-import './Card.css'
+import '../styles/Card.css'
 import { calculateTotalPriceHelper } from "../Utils/CalculateTotalPriceHelper";
 
 const Card = ({ price, product_variants = [], addOns, initialMinimized = true, roomData, quantity, onAddToCart, data, subCat, onDone,

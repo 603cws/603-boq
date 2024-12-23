@@ -10,7 +10,7 @@ const NextArrow = ({ onClick }) => (
     className="slick-next absolute top-1/2 right-5 transform -translate-y-1/2 p-2 rounded-full shadow-lg slick-btn"
     onClick={onClick}
   >
-   
+
   </button>
 );
 
@@ -20,7 +20,7 @@ const PrevArrow = ({ onClick }) => (
     className="slick-prev absolute top-1/2 left-100 transform -translate-y-1/2  p-2 rounded-full shadow-lg slick-btn"
     onClick={onClick}
   >
-  
+
   </button>
 );
 
@@ -57,7 +57,7 @@ const RoomDataBox = ({ roomData }) => {
       },
     ],
   };
-  
+
 
   return (
     <div className="room-data-carousel-container relative w-full ">
