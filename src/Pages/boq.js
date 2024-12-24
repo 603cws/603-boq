@@ -34,7 +34,7 @@ const App = () => {
   const [cabinsQuestions, setCabinsQuestions] = useState(false);
   const [category, setCategory] = useState('');
   const [categories, setCategories] = useState([]);
-  const categoriesWithModal = ['Flooring', 'HVAC'];   // Array of categories that should show the modal when clicked
+  const categoriesWithModal = ['Flooring', 'HVAC', 'Partitions / Ceilings'];   // Array of categories that should show the modal when clicked
   const userID = '67a73a7c-8556-44b0-a42e-81ba988b25ff';
   const baseUrl = process.env.NODE_ENV === 'production' ? 'https://603-layout.vercel.app' : 'http://localhost:3001';
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Get the secret key from the environment variable
@@ -44,6 +44,12 @@ const App = () => {
 
   // Encrypt the userID
   const encryptedUserId = CryptoJS.AES.encrypt(userID, secretKey).toString();
+  const [showSavedBoqs, setShowSavedBoqs] = useState(false);
+  const savedBoqs = [
+    { id: 1, name: 'BOQ 1' },
+    { id: 2, name: 'BOQ 2' },
+    { id: 3, name: 'BOQ 3' },
+  ];
 
   async function fetchCategories() {
     try {
@@ -401,6 +407,8 @@ const App = () => {
       cabinFlooring: answers.cabinFlooring,
       hvacType: answers.hvacType,
       hvacCentralized: answers.hvacCentralized,
+      partitionArea: answers.partitionArea,
+      partitionType: answers.partitionType,
       [expandedSubcategory]: answers, // Store answers for the subcategory
       // [expandedSubcategory]: answers,
     }));
@@ -523,6 +531,11 @@ const App = () => {
       [`${category}-${subcategory}`]: 0, // Use template literals to create the key
     }));
   };
+  const handleViewBOQ = (boqId) => {
+    console.log(`Viewing BOQ with ID: ${boqId}`);
+    // Add logic to navigate or display the selected BOQ
+  };
+
 
   const renderCards = (products, subCat, category) => {
     return products.map((product) => (
@@ -551,6 +564,7 @@ const App = () => {
           category={category}
           totalBOQCost={totalBOQCost}
           areasData={roomAreas[0]}
+          categoriesWithModal={categoriesWithModal}
         />
       </div>
     ));
@@ -562,9 +576,30 @@ const App = () => {
         <Button href={`${baseUrl}/?userId=${encodeURIComponent(encryptedUserId)}`} className='GoToLayout-btn'>
           <ArrowLeftFromLine />Go to Layout
         </Button>
-        <Button className='SaveBoq-btn' /*onClick={() => handleSaveBOQ(selectedData)}*/>Save BOQ
-          <ArrowRightFromLine />
-        </Button>
+        <div className='relative'>
+          <Button className='SaveBoq-btn'>Save BOQ
+            <ArrowRightFromLine />
+          </Button>
+          <Button
+            className='SaveBoq-btn mx-3 bg-blue-500 text-white rounded-full px-2 py-1 cursor-pointer'
+            onMouseEnter={() => setShowSavedBoqs(true)}
+          >
+            Saved BOQs
+          </Button>
+          {showSavedBoqs && (
+            <div className='absolute top-full right-0 mt-2 bg-white border rounded shadow-md w-80'>
+              <p className='px-4 py-2 font-bold'>Saved BOQs</p>
+              <ul className='max-h-60 overflow-auto'>
+                {savedBoqs.map((boq) => (
+                  <li key={boq.id} className='px-4 py-2 hover:bg-gray-100 flex justify-between items-center'>
+                    <span>{boq.name}</span>
+                    <button onClick={() => handleViewBOQ(boq.id)} className='text-blue-500'>View</button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
       <Filters searchQuery={searchQuery} handleSearch={handleSearch} priceRange={priceRange} handleSliderChange={handleSliderChange}
         toggleFilters={toggleFilters} showFilters={showFilters} selectedCategory={selectedCategory}
@@ -590,7 +625,7 @@ const App = () => {
               <h2 onClick={() => handleCategoryClick(category)}>{category}</h2>
 
               {/* Check if category is 'Flooring' and answer is 'allArea' */}
-              {category === "Flooring" && userResponses.flooringArea === "allArea" ? (
+              {(category === "Flooring" && userResponses.flooringArea === "allArea") || (category === 'Partitions / Ceilings' && userResponses.partitionArea === "allArea") || (category === "HVAC" && userResponses.hvacType === "Centralized") ? (
                 <div>
                   {/* If user selected 'allArea', display the selected flooring type */}
                   {userResponses.flooringType && (
@@ -607,11 +642,22 @@ const App = () => {
                       </div>
                     </div>
                   )}
-                </div>
-              ) : category === "HVAC" && userResponses.hvacType === "Centralized" ? (
-                <div>
-                  {/* If category is HVAC and user selected 'combination' */}
-                  {userResponses.hvacCentralized && (
+                  {category === "Partitions / Ceilings" && userResponses.partitionType && (
+                    <div>
+                      <h3>Showing products for: {userResponses.partitionType}</h3>
+                      <div className="subcategory-section">
+                        {renderCards(
+                          productsData.filter(
+                            (product) =>
+                              product.subcategory === "All Areas" &&
+                              product.subcategory1 === userResponses.partitionType
+                          ),
+                          "All Areas"
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {category === "HVAC" && userResponses.hvacType && (
                     <div>
                       <h3>Showing HVAC products for: {userResponses.hvacCentralized}</h3>
                       <div className="subcategory-section">

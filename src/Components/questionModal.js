@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 
 const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, category }) => {
+  console.log("category in question modal", category);
   // Map categories to their respective types
   const typeMapping = {
     Flooring: "flooring type",
     HVAC: "AC type",
+    "Partitions / Ceilings": "partition/ceiling type"
   };
 
   // Get the current category type
@@ -53,6 +55,17 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, category }) => {
     },
   ];
 
+  const partitionQuestions = [
+    {
+      name: "partitionArea",
+      label: "Do you want the same partition to all areas or customize?",
+      options: [
+        { value: "allArea", label: "All Area" },
+        { value: "customizeAreas", label: "Customize Areas" },
+      ],
+    },
+  ];
+
   // State variables for questions, answers, and question navigation
   const [questions, setQuestions] = useState(flooringQuestions);
   const [answers, setAnswers] = useState({});
@@ -72,6 +85,8 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, category }) => {
       setQuestions(flooringQuestions);
     } else if (category === "HVAC") {
       setQuestions(hvacQuestions);
+    } else if (category === "Partitions / Ceilings") {
+      setQuestions(partitionQuestions);
     }
   }, [cabinsQuestions, category]); // Re-run when cabinsQuestions or category changes
 
@@ -125,6 +140,26 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, category }) => {
             options: [
               { value: "Split AC", label: "Split AC" },
               { value: "Duct AC", label: "Duct AC" },
+            ],
+          },
+        ];
+        setQuestions(updatedQuestions);
+      }
+    } else if (name === "partitionArea" && value === "allArea") {
+      const partitionTypeExists = questions.some(
+        (q) => q.name === "partitionType"
+      );
+      if (!partitionTypeExists) {
+        const updatedQuestions = [
+          ...questions,
+          {
+            name: "partitionType",
+            label: "Select partition type for all areas:",
+            options: [
+              { value: "Glass Partition", label: "Glass" },
+              { value: "Gypsum Partition", label: "Gypsum" },
+              { value: "Wood Partition", label: "Wood" },
+              { value: "Concrete Partition", label: "Concrete" },
             ],
           },
         ];

@@ -4,12 +4,11 @@ import '../styles/Card.css'
 import { calculateTotalPriceHelper } from "../Utils/CalculateTotalPriceHelper";
 
 const Card = ({ price, product_variants = [], addOns, initialMinimized = true, roomData, quantity, onAddToCart, data, subCat, onDone,
-    addon_variants = [], setPrice, selectedData, setSelectedData, product, category, areasData, totalBOQCost }) => {
+    addon_variants = [], setPrice, selectedData, setSelectedData, product, category, areasData, categoriesWithModal }) => {
 
     const [isMinimized, setIsMinimized] = useState(initialMinimized);
     const [selectedAddOns, setSelectedAddOns] = useState({});
     const [showModal, setShowModal] = useState(false);
-    console.log("selected addons", selectedAddOns)
     const colorOptions = product_variants
         .filter(variant => variant.image)  // Filter out variants with null or undefined images
         .map(variant => ({
@@ -31,6 +30,16 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
     const [isImageLoaded, setIsImageLoaded] = useState(false);
 
     const basePrice = selectedPrice;  //price
+    const [isHighlighted, setIsHighlighted] = useState(false);
+
+    useEffect(() => {
+        const groupKey = `${category}-${subCat}`;
+        setIsHighlighted(
+            selectedData.some(item => item.groupKey === groupKey && item.id === product.id)
+        );
+        console.log("group key", groupKey)
+    }, [selectedData]);
+
 
     useEffect(() => {
         if (showModal) {
@@ -152,13 +161,13 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
         // clearSelectedData();
         const key = `${category}-${subCat}`;
 
-        const priceValue = Number(price[key]); // Ensure it's a number
-        const totalPrice = Number(calculateTotalPrice); // Ensure it's a number
+        const priceValue = Number(price[key] || 0); // Ensure it's a number
+        const totalPrice = Number(calculateTotalPrice || 0); // Ensure it's a number
 
         if (priceValue - totalPrice > -1) {
-            setPrice(key, -totalPrice);
+            setPrice(key, priceValue, -totalPrice);
         } else {
-            setPrice(key, 0);
+            setPrice(key, priceValue, 0);
         }
         toggleMinimize();
         setSelectedProductId(productID);
@@ -167,20 +176,20 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
     };
 
     const handelSelectedData = () => {
-        if (!product || product.id !== selectedProductId) {
-            console.error("Product not found or ID does not match.");
-            return;
-        }
-        const uniqueKey = `${product.id}-${subCat}`
+        if (!product) return;
+
+        // Unique group key to ensure only one selection per group
+        const groupKey = `${category}-${subCat}`;
+
         const productData = {
-            uniqueKey,
+            groupKey, // For group-level management
             id: product.id,
-            category: category,
+            category,
             subcategory: subCat,
             subcategory1: product.subcategory1,
             product_variant: {
                 variant_title: selectedTitle,
-                variant_iamge: selectedImage,
+                variant_image: selectedImage,
                 variant_details: selectedDetails,
                 variant_price: selectedPrice,
                 variant_id: selectedId,
@@ -188,30 +197,38 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
             },
             addons: selectedAddOns,
         };
-        // Update selectedData state
+
+        // Update selectedData to replace any existing product in the group
         setSelectedData((prevData) => {
-            // Find if the product already exists by product.id
-            const productIndex = prevData.findIndex(
-                (item) => item.uniqueKey === uniqueKey // Check by `id` not by `product_variant.id`
-            );
+            // Check if the exact product already exists
+            const isDuplicate = prevData.some(item => item.groupKey === groupKey && item.id === product.id);
 
-            let updatedData;
-
-            if (productIndex !== -1) {
-                // Product exists, update it
-                updatedData = [...prevData];
-                updatedData[productIndex] = { ...updatedData[productIndex], ...productData };
-            } else {
-                // Product does not exist, add it
-                updatedData = [...prevData, productData];
+            if (isDuplicate) {
+                console.log("Duplicate product detected. Skipping addition.");
+                return prevData; // Return unchanged data if duplicate is found
             }
 
-            // Save updated data to localStorage
-            localStorage.setItem("selectedData", JSON.stringify(updatedData));
-            localStorage.setItem("totalBOQCost", JSON.stringify(totalBOQCost));
-            return updatedData;
+            if (categoriesWithModal.includes(category)) {
+                // Replace existing product in the same group
+                const updatedData = prevData.filter(item => item.groupKey !== groupKey);
+                updatedData.push(productData); // Add the new product
+                localStorage.setItem("selectedData", JSON.stringify(updatedData)); // Persist updated state
+                return updatedData;
+            } else {
+                // Add the product without replacing
+                const updatedData = [...prevData, productData];
+                localStorage.setItem("selectedData", JSON.stringify(updatedData)); // Persist updated state
+                return updatedData;
+            }
         });
+
+        console.log("group key in selected data function", groupKey)
+        // Reset UI state for proper replacement
+        // toggleMinimize(); // Minimize card
     };
+
+
+
 
     const clearSelectedData = () => {
         localStorage.removeItem('selectedData');
@@ -220,7 +237,7 @@ const Card = ({ price, product_variants = [], addOns, initialMinimized = true, r
     if (!isMinimized) {
         return (
             <>
-                <div key={product.id} className="minimized-card mb-5">
+                <div key={product.id} className={`"minimized-card mb-5 mt-5" ${isHighlighted ? 'highlighted' : ''}`}>
                     <div className='flex justify-between'>
                         <div className="info">
                             <span>{selectedTitle}</span>
