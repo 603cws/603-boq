@@ -12,6 +12,7 @@ import PDFGenerator from "../Components/PDFGenerator";
 import Filters from "../Components/Filters";
 import { calculateTotalPriceHelper } from "../Utils/CalculateTotalPriceHelper";
 import processData from '../Utils/dataProcessor';
+import CryptoJS from 'crypto-js';
 
 const App = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -32,21 +33,41 @@ const App = () => {
   const [workspaces, setWorkspaces] = useState([]);
   const [cabinsQuestions, setCabinsQuestions] = useState(false);
   const [category, setCategory] = useState('');
+  const [categories, setCategories] = useState([]);
   const categoriesWithModal = ['Flooring', 'HVAC'];   // Array of categories that should show the modal when clicked
-  const userID = 'ecc4de0e-ea4a-4537-b659-d58a8852f07b'
+  const userID = '67a73a7c-8556-44b0-a42e-81ba988b25ff';
+  const baseUrl = process.env.NODE_ENV === 'production' ? 'https://603-layout.vercel.app' : 'http://localhost:3001';
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Get the secret key from the environment variable
+  if (!secretKey) {
+    throw new Error("Secret key is undefined. Check your environment variable REACT_APP_SECRET_KEY.");
+  }
 
-  const categories = [
-    'Furniture',
-    'Civil / Plumbing',
-    'Lighting',
-    'Electrical',
-    'Partitions- door / windows / ceilings',
-    'Paint',
-    'HVAC',
-    'Smart Solutions',
-    'Flooring',
-    'Accessories'
-  ];
+  // Encrypt the userID
+  const encryptedUserId = CryptoJS.AES.encrypt(userID, secretKey).toString();
+
+  async function fetchCategories() {
+    try {
+      // Fetch data from the 'categories' table
+      const { data, error } = await supabase
+        .from('categories')
+        .select('name'); // Select the 'name' column
+
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return [];
+      }
+
+      // Map the result to an array of category names
+      const categories = data.map((item) => item.name);
+      setCategories(categories);
+
+      // console.log('Categories fetched successfully:', categories);
+      return categories;
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      return [];
+    }
+  };
 
   console.log("selected data", selectedData);
 
@@ -243,7 +264,7 @@ const App = () => {
   // };
 
   useEffect(() => {
-    Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces()]);
+    Promise.all([fetchRoomData(), fetchProductsData(), fetchWorkspaces(), fetchCategories()]);
   }, []);
 
   useEffect(() => {
@@ -538,7 +559,7 @@ const App = () => {
   return (
     <div className="App">
       <div className='px-3 flex justify-between'>
-        <Button href='https://603-layout.vercel.app/' className='GoToLayout-btn'>
+        <Button href={`${baseUrl}/?userId=${encodeURIComponent(encryptedUserId)}`} className='GoToLayout-btn'>
           <ArrowLeftFromLine />Go to Layout
         </Button>
         <Button className='SaveBoq-btn' /*onClick={() => handleSaveBOQ(selectedData)}*/>Save BOQ

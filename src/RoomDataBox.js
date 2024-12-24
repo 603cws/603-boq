@@ -3,7 +3,6 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 
-
 // Custom Next Arrow component for carousel
 const NextArrow = ({ onClick }) => (
   <button
@@ -57,7 +56,6 @@ const RoomDataBox = ({ roomData }) => {
       },
     ],
   };
-
 
   return (
     <div className="room-data-carousel-container relative w-full ">
