@@ -24,10 +24,38 @@ const ProductPage = () => {
                     'https://via.placeholder.com/300/0000FF',
                 ],
             },
-            // Other products...
+            {
+                title: 'Glass Dining Table',
+                description: 'A sleek glass dining table for modern homes.',
+                price: '$300',
+                image: 'https://via.placeholder.com/300',
+                additionalImages: [
+                    'https://via.placeholder.com/300/FFFF00',
+                    'https://via.placeholder.com/300/FF00FF',
+                ],
+            },
         ],
         Chairs: [
-            // Chair products...
+            {
+                title: 'Comfortable Office Chair',
+                description: 'An ergonomic chair perfect for long hours of work.',
+                price: '$120',
+                image: 'https://via.placeholder.com/300',
+                additionalImages: [
+                    'https://via.placeholder.com/300/FFA500',
+                    'https://via.placeholder.com/300/800080',
+                ],
+            },
+            {
+                title: 'Stylish Lounge Chair',
+                description: 'A stylish lounge chair for your living room.',
+                price: '$200',
+                image: 'https://via.placeholder.com/300',
+                additionalImages: [
+                    'https://via.placeholder.com/300/008000',
+                    'https://via.placeholder.com/300/000080',
+                ],
+            },
         ],
     };
 
