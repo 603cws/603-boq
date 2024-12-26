@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import Sidebar from './components/SideBar';
-import ProgressBar from './components/ProgressBar';
-import CategoryButtons from './components/CategoryButtons';
-import ProductList from './components/ProductList';
-import AddonsSection from './components/AddonsSection';
-import Recommendations from './components/Recommendations';
+import Sidebar from './Components/SideBar.jsx';
+import ProgressBar from './Components/ProgressBar.js';
+import CategoryButtons from './Components/CategoryButtons.js';
+import ProductList from './Components/ProductList';
+import AddonsSection from './Components/AddonsSection';
+import Recommendations from './Components/Recommendations.js';
 
 const ProductPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('Tables');
