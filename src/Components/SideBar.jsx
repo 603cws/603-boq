@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../styles/SideBar.css'
+import '../styles/SideBar.css';
 import { supabase } from '../services/supabase';
 import { Layers2Icon } from 'lucide-react';
 
@@ -12,18 +12,21 @@ const SideBar = () => {
             try {
                 const { data, error } = await supabase
                     .from('categories')
-                    .select('name, subcategories');
+                    .select('id, name, subcategories'); // Include 'id' in the query
 
                 if (error) {
                     console.error('Error fetching categories:', error);
                     return;
                 }
 
-                // Parse subcategories JSON strings into arrays
-                const formattedData = data.map((item) => ({
-                    category: item.name,
-                    subcategories: JSON.parse(item.subcategories || '[]'), // Ensure subcategories is an array
-                }));
+                // Parse subcategories JSON strings into arrays and sort by 'id'
+                const formattedData = data
+                    .map((item) => ({
+                        id: item.id,
+                        category: item.name,
+                        subcategories: JSON.parse(item.subcategories || '[]'), // Ensure subcategories is an array
+                    }))
+                    .sort((a, b) => a.id - b.id); // Sort by 'id'
 
                 setCategories(formattedData);
             } catch (err) {
@@ -33,16 +36,16 @@ const SideBar = () => {
 
         fetchCategories();
     }, []);
+
     const handleToggleCategory = (category) => {
         setExpandedCategory((prev) => (prev === category ? null : category)); // Toggle expand/collapse
     };
 
     return (
         <div className="sidebar">
-
-            {categories.map(({ category, subcategories }) => (
+            {categories.map(({ id, category, subcategories }) => (
                 <div
-                    key={category}
+                    key={id}
                     className={`category ${expandedCategory === category ? 'expanded' : ''}`}
                 >
                     {/* Category Title */}
@@ -50,9 +53,10 @@ const SideBar = () => {
                         className="category-header font-bold"
                         onClick={() => handleToggleCategory(category)}
                     >
-                        <span className='flex gap-2'>
+                        <span className="flex gap-2">
                             <Layers2Icon />
-                            {category}</span>
+                            {category}
+                        </span>
                         <span className="toggle-icon font-bold">
                             {expandedCategory === category ? '-' : '+'}
                         </span>
