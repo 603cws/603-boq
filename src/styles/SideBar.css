@@ -1,0 +1,50 @@
+.sidebar {
+    width: 300px;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+    background-color: #d6d6d6;
+}
+
+.category {
+    margin-bottom: 10px;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 8px;
+    border-bottom: 2px solid #cccc;
+    border-radius: 4px;
+}
+
+.category-header:hover {
+    background-color: #d6d6d6;
+}
+
+.toggle-icon {
+    font-weight: bold;
+}
+
+.subcategory-list {
+    list-style: none;
+    margin: 5px 0 0 15px;
+    padding: 0;
+    overflow: hidden; /* Prevents content from overflowing during transition */
+    max-height: 0; /* Initially collapsed */
+    transition: max-height 0.5s ease-in-out; /* Adds transition effect */
+}
+
+.subcategory-item {
+    padding: 5px 0;
+    cursor: pointer;
+}
+
+.subcategory-item:hover {
+    text-decoration: underline;
+}
+
+/* Add class for expanded state */
+.category.expanded .subcategory-list {
+    max-height: 500px; /* A value large enough to accommodate the list height */
+}
