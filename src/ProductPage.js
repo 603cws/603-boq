@@ -259,22 +259,24 @@ const ProductPage = () => {
     // }
 
     return (
-        <div className="product-page" style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '60px' }}>
-            <Sidebar />
-            <div style={{ flex: 1, marginLeft: '250px' }}>
-                <ProgressBar progressPercentage={progressPercentage} />
-                <CategoryButtons selectedCategory={selectedCategory2} setSelectedCategory={setSelectedCategory2} />
-                <main className="main-content" style={{ marginTop: '70px', padding: '1rem' }}>
-                    {groupedProducts && <ProductList
-                        products={groupedProducts}
-                        selectedCategory={selectedCategory}
-                        handleSelectProduct={handleSelectProduct}
-                        selectedProduct={selectedCategory2 === 'Tables' ? selectedTable : selectedChair}
-                    />}
-                </main>
-                <AddonsSection />
+        <div>
+            <ProgressBar progressPercentage={progressPercentage} />
+            <div className="product-page flex justify-between">
+                <Sidebar />
+                <div>
+                    <CategoryButtons selectedCategory={selectedCategory2} setSelectedCategory={setSelectedCategory2} />
+                    <main className="main-content flex">
+                        {groupedProducts && <ProductList
+                            products={groupedProducts}
+                            selectedCategory={selectedCategory}
+                            handleSelectProduct={handleSelectProduct}
+                            selectedProduct={selectedCategory2 === 'Tables' ? selectedTable : selectedChair}
+                        />}
+                    </main>
+                    <AddonsSection />
+                </div>
+                <Recommendations />
             </div>
-            <Recommendations />
         </div>
     );
 };

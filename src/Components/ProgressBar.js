@@ -2,12 +2,18 @@ import React from 'react';
 
 const ProgressBar = ({ progressPercentage }) => {
     return (
-        <div className="progress-bar-container" style={{ position: 'fixed', top: '0', left: '0', width: '100%', backgroundColor: '#f0f0f0', padding: '0.5rem 1rem', zIndex: '1000' }}>
-            <h2 className="category-name" style={{ color: '#4CAF50', fontWeight: 'bold', fontSize: '20px', margin: '0' }}>Product Categories</h2>
-            <div className="progress-bar-outer" style={{ backgroundColor: '#ddd', borderRadius: '8px', overflow: 'hidden', height: '20px', marginTop: '0.5rem' }}>
-                <div className="progress-bar-inner" style={{ width: `${progressPercentage}%`, backgroundColor: '#4CAF50', height: '100%', textAlign: 'center', color: '#fff', lineHeight: '20px' }}>
+        <div className="fixed top-0 left-0 w-full bg-gray-100 p-2 z-50">
+            <div className="flex justify-between items-center mb-1">
+                {/* <span className="text-sm font-medium text-gray-600">Progress</span> */}
+                <span className={`text-xs font-semibold text-white bg-green-600 px-2 py-1 rounded-full`}>
                     {progressPercentage === 100 ? 'Completed ✓' : `${progressPercentage}%`}
-                </div>
+                </span>
+            </div>
+            <div className="bg-gray-300 rounded-md overflow-hidden h-1">
+                <div
+                    className="bg-green-600 h-full"
+                    style={{ width: `${progressPercentage}%` }}
+                ></div>
             </div>
         </div>
     );

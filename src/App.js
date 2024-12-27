@@ -138,8 +138,6 @@ const ProductPage = () => {
 
     return (
         <div className="product-page" style={{ display: 'flex', justifyContent: 'space-between' }}>
-            {/* Sidebar */}
-            <aside className="sidebar" style={{ width: '250px', marginTop: '70px' }}>Sidebar Content</aside>
 
             {/* Left Section (Product List and Progress Bar) */}
             <div style={{ flex: 1, marginLeft: '250px' }}>

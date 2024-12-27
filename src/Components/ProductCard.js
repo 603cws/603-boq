@@ -1,70 +1,97 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Modal from './Modal';
 
-const ProductCard = ({ product, variant, additionalImages, handleSelectProduct, isSelected }) => {
+const ProductCard = ({ product, handleSelectProduct, isSelected, variant, additionalImages }) => {
+    const [mainImageHovered, setMainImageHovered] = useState(false); // For main image hover effect
+    const [showModal, setShowModal] = useState(false); // For modal visibility
+    const [hoveredImage, setHoveredImage] = useState(null); // For additional image hover effect
+
+    const handleExpandVariant = () => {
+        setShowModal(true);
+    };
+
     return (
-        <div className="product-details" style={{ border: '1px solid #ccc', padding: '10px', width: '300px' }}>
-            <h1 style={{ color: '#333', fontSize: '1.5rem', marginBottom: '0.5rem' }}>{variant.title}</h1>
-            <p style={{ fontSize: '1rem', marginBottom: '0.5rem', color: '#555' }}>{variant.details}</p>
-            <p style={{ fontWeight: 'bold', color: '#4CAF50' }}>Price: ₹{variant.price}</p>
-
-            {/* Main Image */}
+        <>
             <div
-                className="main-image-box"
+                className={`relative bg-white rounded-lg shadow-md transition-transform duration-300`}
+                onMouseEnter={() => setMainImageHovered(true)}
+                onMouseLeave={() => setMainImageHovered(false)}
+                onClick={handleExpandVariant}
                 style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: '300px',
-                    height: '300px',
-                    border: '1px solid #ddd',
-                    margin: '1rem auto',
-                    borderRadius: '8px',
+                    transform: mainImageHovered ? 'scale(1.3)' : 'scale(1)',
+                    zIndex: mainImageHovered ? 10 : 1,
                 }}
             >
-                <img
-                    src={variant.image}
-                    alt={variant.title}
-                    style={{ width: '100%', borderRadius: '8px' }}
-                />
-            </div>
-
-            {/* Additional Images */}
-            {additionalImages.length > 0 && (
-                <div className="additional-images" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                    {additionalImages.map((img, idx) => (
-                        <img
-                            key={idx}
-                            src={img}
-                            alt={`Angle ${idx + 1}`}
-                            style={{
-                                width: '100px',
-                                height: '100px',
-                                objectFit: 'cover',
-                                cursor: 'pointer',
-                                borderRadius: '8px',
-                                border: '2px solid transparent',
-                            }}
-                        />
-                    ))}
+                {/* Main Image */}
+                <div className="relative w-full h-64 overflow-auto">
+                    <img
+                        src={hoveredImage || variant.image} // Displays hoveredImage or original main image
+                        alt={variant.title}
+                        className="w-full h-full object-cover"
+                    />
                 </div>
-            )}
+                {/* Details Section */}
+                {mainImageHovered && (
+                    <div
+                        className={`p-4 transition-opacity duration-300 bg-white w-full absolute -bottom-30 shadow-md ${mainImageHovered ? 'opacity-100 visible ' : 'opacity-0 invisible'
+                            }`}
+                    >
+                        <div className='flex justify-between'>
+                            <h1 className="text-gray-800 text-sm font-bold mb-2">{variant.title}</h1>
+                            <p className="text-green-600 font-semibold mb-4 text-sm">Price: ₹{variant.price}</p>
+                        </div>
+                        <p className="text-gray-600 text-xs mb-2">{variant.description}</p>
 
-            {/* Select Button */}
-            <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-                <button
-                    onClick={handleSelectProduct}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: isSelected ? '#ff9800' : '#2196f3',
-                        border: 'none',
-                        color: '#fff',
-                        cursor: 'pointer',
-                    }}
-                >
-                    {isSelected ? 'Selected' : 'Select'}
-                </button>
+                        {/* Additional Images */}
+                        {additionalImages.length > 0 && (
+                            <div className="additional-images flex gap-2 justify-start">
+                                {additionalImages.map((img, idx) => (
+                                    <img
+                                        key={idx}
+                                        src={img}
+                                        alt={`Angle ${idx + 1}`}
+                                        onMouseEnter={() => setHoveredImage(img)} // Updates hoveredImage on hover
+                                        onMouseLeave={() => setHoveredImage(null)} // Reverts to main image on leave
+                                        className="w-10 h-10 object-cover cursor-pointer rounded-lg border-2 border-transparent"
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        {/* Select Button */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation(); // Prevents modal from opening
+                                handleSelectProduct();
+                            }}
+                            className={`mt-4 px-4 py-1 rounded text-white text-xs ${isSelected ? 'bg-orange-500' : 'bg-blue-500 hover:bg-blue-600'
+                                }`}
+                        >
+                            {isSelected ? 'Selected' : 'Select'}
+                        </button>
+                    </div>
+                )}
             </div>
-        </div>
+
+            {/* Modal */}
+            {showModal && (
+                <Modal
+                    showModal={showModal}
+                    onClose={() => setShowModal(false)}
+                    variant={variant}
+                    additionalImages={additionalImages}
+                >
+                    {/* <div className="p-4">
+                        <h2 className="text-lg font-bold mb-4">{variant.title}</h2>
+                        <img
+                            src={variant.image}
+                            alt={variant.title}
+                            className="w-full h-96 object-cover rounded-lg"
+                        />
+                        <p className="text-gray-600 mt-4">{variant.description}</p>
+                    </div> */}
+                </Modal>
+            )}
+        </>
     );
 };
 
