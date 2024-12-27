@@ -3,39 +3,11 @@ import '../styles/SideBar.css';
 import { supabase } from '../services/supabase';
 import { Layers2Icon } from 'lucide-react';
 
-const SideBar = () => {
-    const [categories, setCategories] = useState([]);
-    const [expandedCategory, setExpandedCategory] = useState(null); // Track expanded category
+const SideBar = ({ categories, selectedCategory, selectedSubCategory, onSelectSubCategory, }) => {
 
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const { data, error } = await supabase
-                    .from('categories')
-                    .select('id, name, subcategories'); // Include 'id' in the query
-
-                if (error) {
-                    console.error('Error fetching categories:', error);
-                    return;
-                }
-
-                // Parse subcategories JSON strings into arrays and sort by 'id'
-                const formattedData = data
-                    .map((item) => ({
-                        id: item.id,
-                        category: item.name,
-                        subcategories: JSON.parse(item.subcategories || '[]'), // Ensure subcategories is an array
-                    }))
-                    .sort((a, b) => a.id - b.id); // Sort by 'id'
-
-                setCategories(formattedData);
-            } catch (err) {
-                console.error('Unexpected error:', err);
-            }
-        };
-
-        fetchCategories();
-    }, []);
+    const [expandedCategory, setExpandedCategory] = React.useState(
+        selectedCategory || null
+    );
 
     const handleToggleCategory = (category) => {
         setExpandedCategory((prev) => (prev === category ? null : category)); // Toggle expand/collapse
@@ -50,7 +22,10 @@ const SideBar = () => {
                 >
                     {/* Category Title */}
                     <div
-                        className="category-header font-bold"
+                        className={`category-header font-bold cursor-pointer p-2 flex items-center justify-between rounded-md ${selectedCategory === category
+                            ? 'bg-blue-500 text-white'
+                            : 'hover:bg-blue-100'
+                            }`}
                         onClick={() => handleToggleCategory(category)}
                     >
                         <span className="flex gap-2">
@@ -63,10 +38,18 @@ const SideBar = () => {
                     </div>
 
                     {/* Subcategories */}
-                    <ul className="subcategory-list">
+                    <ul className="subcategory-list mt-2 pl-4 space-y-1">
                         {expandedCategory === category &&
                             subcategories.map((subcat) => (
-                                <li key={subcat} className="subcategory-item">
+                                <li
+                                    key={subcat}
+                                    className={`cursor-pointer p-2 rounded-md ${selectedCategory === category &&
+                                        selectedSubCategory === subcat
+                                        ? 'bg-blue-100 text-blue-700 font-bold'
+                                        : 'hover:bg-gray-200'
+                                        }`}
+                                    onClick={() => onSelectSubCategory(category, subcat)}
+                                >
                                     {subcat}
                                 </li>
                             ))}

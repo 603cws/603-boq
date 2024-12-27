@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ProductCard from './ProductCard';
 
-const ProductList = ({ products, selectedCategory, handleSelectProduct, selectedProduct }) => {
+const ProductList = ({ products, selectedCategory, selectedSubCategory, selectedSubCategory1, selectedProduct, onProductSelect }) => {
     const baseImageUrl = 'https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/';
-
-    const selectedSubCategory = 'Linear Workstation'; // This could be dynamic based on user selection
 
     const productsInCategory = products[selectedCategory];
     if (!productsInCategory) {
@@ -14,22 +12,34 @@ const ProductList = ({ products, selectedCategory, handleSelectProduct, selected
     const productsInSubCategory = productsInCategory[selectedSubCategory];
     if (!productsInSubCategory) {
         return <p>Subcategory "{selectedSubCategory}" not found in category "{selectedCategory}".</p>;
-    } else {
-        productsInSubCategory.map(product => {
-            console.log(product);
-        }
-        )
     }
+
+    // Filter products based on selectedSubCategory1
+    const filteredProducts = productsInSubCategory.filter(product => product.subcategory1 === selectedSubCategory1);
+
+    if (filteredProducts.length === 0) {
+        return <p>No products found in subcategory "{selectedSubCategory1}".</p>;
+    }
+
+    const handleSelect = (product, variant) => {
+        // Update selected product in local storage
+        const updatedSelection = { category: selectedCategory, subCategory1: selectedSubCategory1, product: variant };
+        localStorage.setItem('selectedProducts', JSON.stringify(updatedSelection));
+
+        // Trigger the callback for updating state
+        onProductSelect(updatedSelection);
+    };
 
     return (
         <section className="products-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
-            <h1>Products in {selectedSubCategory}</h1>
+            <h1>Products in {selectedSubCategory} - {selectedSubCategory1}</h1>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-                {productsInSubCategory.map((product, index) =>
+                {filteredProducts.map((product, index) =>
                     product.product_variants.map((variant, variantIndex) => {
                         const additionalImagesArray = variant.additional_images
                             ? JSON.parse(variant.additional_images).map(imageName => `${baseImageUrl}${imageName}`)
                             : [];
+                        // console.log("Product List: ", selectedProduct?.id, variant.id)
 
                         return (
                             <ProductCard
@@ -37,8 +47,8 @@ const ProductList = ({ products, selectedCategory, handleSelectProduct, selected
                                 product={product}
                                 variant={variant}
                                 additionalImages={additionalImagesArray}
-                                handleSelectProduct={() => handleSelectProduct(variant)}
-                                isSelected={selectedProduct?.id === variant.id}
+                                isSelected={selectedProduct?.product.id === variant.id}
+                                handleSelect={handleSelect}
                             />
                         );
                     })

@@ -9,7 +9,11 @@ import Recommendations from './Components/Recommendations.js';
 
 const ProductPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('Furniture');
-    const [selectedCategory2, setSelectedCategory2] = useState('Tables');
+    const [selectedSubCategory, setSelectedSubCategory] = useState('');
+    const [selectedSubCategory1, setSelectedSubCategory1] = useState('');
+    const [selectedProducts, setSelectedProducts] = useState([]);
+
+    const [selectedCategory2, setSelectedCategory2] = useState('Table');
     const [selectedTable, setSelectedTable] = useState(null);
     const [selectedChair, setSelectedChair] = useState(null);
     const [categories, setCategories] = useState([]);
@@ -18,76 +22,43 @@ const ProductPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [priceRange, setPriceRange] = useState([1000, 15000]);
 
-    // const products = {
-    //     Tables: [
-    //         {
-    //             title: 'Modern Wooden Table',
-    //             description: 'A beautifully crafted wooden table perfect for dining or workspace.',
-    //             price: '$250',
-    //             image: 'https://via.placeholder.com/300',
-    //             additionalImages: [
-    //                 'https://via.placeholder.com/300/FF0000',
-    //                 'https://via.placeholder.com/300/00FF00',
-    //                 'https://via.placeholder.com/300/0000FF',
-    //             ],
-    //         },
-    //         {
-    //             title: 'Glass Dining Table',
-    //             description: 'A sleek glass dining table for modern homes.',
-    //             price: '$300',
-    //             image: 'https://via.placeholder.com/300',
-    //             additionalImages: [
-    //                 'https://via.placeholder.com/300/FFFF00',
-    //                 'https://via.placeholder.com/300/FF00FF',
-    //             ],
-    //         },
-    //     ],
-    //     Chairs: [
-    //         {
-    //             title: 'Comfortable Office Chair',
-    //             description: 'An ergonomic chair perfect for long hours of work.',
-    //             price: '$120',
-    //             image: 'https://via.placeholder.com/300',
-    //             additionalImages: [
-    //                 'https://via.placeholder.com/300/FFA500',
-    //                 'https://via.placeholder.com/300/800080',
-    //             ],
-    //         },
-    //         {
-    //             title: 'Stylish Lounge Chair',
-    //             description: 'A stylish lounge chair for your living room.',
-    //             price: '$200',
-    //             image: 'https://via.placeholder.com/300',
-    //             additionalImages: [
-    //                 'https://via.placeholder.com/300/008000',
-    //                 'https://via.placeholder.com/300/000080',
-    //             ],
-    //         },
-    //     ],
-    // };
+    const handleSubCategory1Change = (subCategory) => {
+        setSelectedSubCategory1(subCategory);
+    };
 
     async function fetchCategories() {
         try {
             const { data, error } = await supabase
                 .from('categories')
-                .select('name');
+                .select('id, name, subcategories');
 
             if (error) {
                 console.error('Error fetching categories:', error);
-                return [];
+                return;
             }
 
-            const categories = data.map((item) => item.name);
-            setCategories(categories);
-            // console.log("Categories", categories);
-            return categories;
+            const formattedData = data
+                .map((item) => ({
+                    id: item.id,
+                    category: item.name,
+                    subcategories: JSON.parse(item.subcategories || '[]'),
+                }))
+                .sort((a, b) => a.id - b.id);
+
+            setCategories(formattedData);
+
+            // Automatically select the first category and subcategory
+            if (formattedData.length > 0) {
+                setSelectedCategory(formattedData[0].category);
+                setSelectedSubCategory(formattedData[0].subcategories[0] || null);
+            }
         } catch (err) {
             console.error('Unexpected error:', err);
             return [];
         }
     }
 
-    // Fetch products data
+
     async function fetchProductsData() {
         try {
             const { data, error } = await supabase
@@ -138,7 +109,6 @@ const ProductPage = () => {
             }));
 
             setProductData(processedData);
-            // console.log("Products Data", processedData);
         } catch (error) {
             console.error('Error fetching products data:', error);
         } finally {
@@ -158,7 +128,6 @@ const ProductPage = () => {
                 return;
             }
 
-            // console.log("Workspace Data", workspacesData); // You can use it if needed
         } catch (error) {
             console.error('Error fetching workspaces:', error.message);
         }
@@ -223,8 +192,6 @@ const ProductPage = () => {
     const groupedProducts = useMemo(() => {
         const grouped = {};
 
-        // console.log("Filtered Products in group:", filteredProducts);
-
         filteredProducts.forEach(product => {
             const subcategories = product.subcategory.split(',').map(sub => sub.trim());
 
@@ -238,7 +205,6 @@ const ProductPage = () => {
                 grouped[product.category][subcategory].push(product);
             });
         });
-        // console.log("Grouped products in fucntion: ", grouped);
         return grouped;
     }, [filteredProducts]);
 
@@ -246,31 +212,60 @@ const ProductPage = () => {
     const selectedCategoriesCount = (selectedTable ? 1 : 0) + (selectedChair ? 1 : 0);
     const progressPercentage = Math.round((selectedCategoriesCount / totalCategories) * 100);
 
-    const handleSelectProduct = (productTitle) => {
-        if (selectedCategory2 === 'Tables') {
-            setSelectedTable(selectedTable === productTitle ? null : productTitle);
-        } else if (selectedCategory2 === 'Chairs') {
-            setSelectedChair(selectedChair === productTitle ? null : productTitle);
-        }
+    const handleSelectSubCategory = (category, subcategory) => {
+        setSelectedCategory(category);
+        setSelectedSubCategory(subcategory);
+        console.log("Selected Sub Category: ", category, subcategory);
     };
 
-    // if (groupedProducts) {
-    //     console.log("Grouped products: ", groupedProducts);
-    // }
+    const handleProductSelect = (product, variant) => {
+        setSelectedProducts((prevSelected) => {
+            const updatedSelection = prevSelected.filter(
+                (item) =>
+                    item.category !== product.category ||
+                    item.subCategory1 !== product.subCategory1
+            );
+            updatedSelection.push({
+                ...product,
+                selectedVariant: variant,
+            });
+            localStorage.setItem('selectedProducts', JSON.stringify(updatedSelection));
+            return updatedSelection;
+        });
+    };
+
+    const calculateProgress = () => {
+        const totalCategories = Object.keys(groupedProducts).reduce(
+            (count, category) =>
+                count + Object.keys(groupedProducts[category]).length,
+            0
+        );
+        return (selectedProducts.length / totalCategories) * 100;
+    };
 
     return (
         <div>
-            <ProgressBar progressPercentage={progressPercentage} />
-            <div className="product-page flex justify-between">
-                <Sidebar />
+            <ProgressBar progressPercentage={calculateProgress()} />
+            <div className="product-page flex justify-between mt-8">
+                <Sidebar categories={categories}
+                    selectedCategory={selectedCategory}
+                    selectedSubCategory={selectedSubCategory}
+                    onSelectSubCategory={handleSelectSubCategory}
+                />
                 <div>
-                    <CategoryButtons selectedCategory={selectedCategory2} setSelectedCategory={setSelectedCategory2} />
+                    <CategoryButtons selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} onSubCategory1Change={handleSubCategory1Change} />
                     <main className="main-content flex">
                         {groupedProducts && <ProductList
                             products={groupedProducts}
                             selectedCategory={selectedCategory}
-                            handleSelectProduct={handleSelectProduct}
-                            selectedProduct={selectedCategory2 === 'Tables' ? selectedTable : selectedChair}
+                            selectedSubCategory={selectedSubCategory}
+                            selectedSubCategory1={selectedSubCategory1}
+                            selectedProduct={selectedProducts.find(
+                                (item) =>
+                                    item.category === selectedCategory &&
+                                    item.subCategory1 === selectedSubCategory1
+                            )}
+                            onProductSelect={handleProductSelect}
                         />}
                     </main>
                     <AddonsSection />
@@ -279,6 +274,6 @@ const ProductPage = () => {
             </div>
         </div>
     );
-};
+}
 
 export default ProductPage;

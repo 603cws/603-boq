@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 
-const ProductCard = ({ product, handleSelectProduct, isSelected, variant, additionalImages }) => {
+const ProductCard = ({ product, variant, additionalImages, isSelected, handleSelect }) => {
     const [mainImageHovered, setMainImageHovered] = useState(false); // For main image hover effect
     const [showModal, setShowModal] = useState(false); // For modal visibility
     const [hoveredImage, setHoveredImage] = useState(null); // For additional image hover effect
@@ -61,7 +61,7 @@ const ProductCard = ({ product, handleSelectProduct, isSelected, variant, additi
                         <button
                             onClick={(e) => {
                                 e.stopPropagation(); // Prevents modal from opening
-                                handleSelectProduct();
+                                handleSelect(product, variant);
                             }}
                             className={`mt-4 px-4 py-1 rounded text-white text-xs ${isSelected ? 'bg-orange-500' : 'bg-blue-500 hover:bg-blue-600'
                                 }`}
