@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Modal.css";
 
-const Modal = ({
-  onClose,
-  variant,
-  additionalImages,
-  selectedAddOns,
-  handleAddOnChange,
-  calculateTotalPrice,
-  handleDoneClick,
-}) => {
+const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOnChange, calculateTotalPrice, handleDoneClick, product }) => {
   const [hoveredImage, setHoveredImage] = useState(variant.image); // Default to main image
   const baseImageUrl = 'https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/';
 

@@ -79,6 +79,7 @@ const ProductCard = ({ product, variant, additionalImages, isSelected, handleSel
                     onClose={() => setShowModal(false)}
                     variant={variant}
                     additionalImages={additionalImages}
+                    product={product}
                 >
                     {/* <div className="p-4">
                         <h2 className="text-lg font-bold mb-4">{variant.title}</h2>
