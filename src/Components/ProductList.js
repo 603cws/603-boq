@@ -1,7 +1,7 @@
 import React from 'react';
 import ProductCard from './ProductCard';
 
-const ProductList = ({ products, selectedCategory, selectedSubCategory, selectedSubCategory1, selectedProduct, onProductSelect }) => {
+const ProductList = ({ products, selectedCategory, selectedSubCategory, selectedSubCategory1, selectedProduct, onProductSelect, setSelectedProducts, quantityData, areasData }) => {
     const baseImageUrl = 'https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/';
 
     const productsInCategory = products[selectedCategory];
@@ -49,6 +49,10 @@ const ProductList = ({ products, selectedCategory, selectedSubCategory, selected
                                 additionalImages={additionalImagesArray}
                                 isSelected={selectedProduct?.product.id === variant.id}
                                 handleSelect={handleSelect}
+                                selectedCategory={selectedCategory}
+                                selectedSubCategory={selectedSubCategory}
+                                quantityData={quantityData}
+                                areasData={areasData}
                             />
                         );
                     })

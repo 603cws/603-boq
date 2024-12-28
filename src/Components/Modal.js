@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Modal.css";
+import InfoButton from './InfoButton.js';
+import { CalculateVariantPrice } from '../Utils/CalulateVariantPrice.js';
 
-const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOnChange, calculateTotalPrice, handleDoneClick, product }) => {
+const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOnChange, calculateTotalPrice, handleDoneClick, product, selectedCategory, selectedSubCategory, quantityData, areasData }) => {
   const [hoveredImage, setHoveredImage] = useState(variant.image); // Default to main image
   const baseImageUrl = 'https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/';
 
@@ -73,7 +75,15 @@ const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOn
               <p className="text-xs text-wrap">{variant.details}</p>
 
               {/* Product Price */}
-              <p className="font-semibold text-sm mt-2">Price: ₹{variant.price}</p>
+              <p className="font-semibold text-sm mt-2">Price: ₹{CalculateVariantPrice(selectedCategory, selectedSubCategory, variant.price, quantityData, areasData)}</p>
+              <InfoButton
+                selectedCategory={selectedCategory}
+                selectedSubCategory={selectedSubCategory}
+                quantityData={quantityData}
+                areasData={areasData}
+                variant={variant}
+                price={variant.price}
+              />
             </div>
           </div>
         </div>

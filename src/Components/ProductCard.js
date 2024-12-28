@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
+import InfoButton from './InfoButton.js';
+import { CalculateVariantPrice } from '../Utils/CalulateVariantPrice.js';
 
-const ProductCard = ({ product, variant, additionalImages, isSelected, handleSelect }) => {
+const ProductCard = ({ product, variant, additionalImages, isSelected, handleSelect, selectedCategory, selectedSubCategory, quantityData, areasData }) => {
     const [mainImageHovered, setMainImageHovered] = useState(false); // For main image hover effect
     const [showModal, setShowModal] = useState(false); // For modal visibility
     const [hoveredImage, setHoveredImage] = useState(null); // For additional image hover effect
@@ -36,9 +38,22 @@ const ProductCard = ({ product, variant, additionalImages, isSelected, handleSel
                         className={`p-4 transition-opacity duration-300 bg-white w-full absolute -bottom-30 shadow-md ${mainImageHovered ? 'opacity-100 visible ' : 'opacity-0 invisible'
                             }`}
                     >
-                        <div className='flex justify-between'>
+                        <div className="flex justify-between items-center">
                             <h1 className="text-gray-800 text-sm font-bold mb-2">{variant.title}</h1>
-                            <p className="text-green-600 font-semibold mb-4 text-sm">Price: ₹{variant.price}</p>
+                            <div className="flex items-center gap-2 relative">
+                                <p className="text-green-600 font-semibold mb-4 text-sm">
+                                    Price: ₹{CalculateVariantPrice(selectedCategory, selectedSubCategory, variant.price, quantityData, areasData)}
+                                </p>
+                                {/* Info Button */}
+                                <InfoButton
+                                    selectedCategory={selectedCategory}
+                                    selectedSubCategory={selectedSubCategory}
+                                    quantityData={quantityData}
+                                    areasData={areasData}
+                                    variant={variant}
+                                    price={variant.price}
+                                />
+                            </div>
                         </div>
                         <p className="text-gray-600 text-xs mb-2">{variant.description}</p>
 
@@ -80,17 +95,11 @@ const ProductCard = ({ product, variant, additionalImages, isSelected, handleSel
                     variant={variant}
                     additionalImages={additionalImages}
                     product={product}
-                >
-                    {/* <div className="p-4">
-                        <h2 className="text-lg font-bold mb-4">{variant.title}</h2>
-                        <img
-                            src={variant.image}
-                            alt={variant.title}
-                            className="w-full h-96 object-cover rounded-lg"
-                        />
-                        <p className="text-gray-600 mt-4">{variant.description}</p>
-                    </div> */}
-                </Modal>
+                    selectedCategory={selectedCategory}
+                    selectedSubCategory={selectedSubCategory}
+                    quantityData={quantityData}
+                    areasData={areasData}
+                />
             )}
         </>
     );

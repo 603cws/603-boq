@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { supabase } from './services/supabase';
 import Sidebar from './Components/SideBar.jsx';
 import ProgressBar from './Components/ProgressBar.js';
 import CategoryButtons from './Components/CategoryButtons.js';
 import ProductList from './Components/ProductList';
 import AddonsSection from './Components/AddonsSection';
 import Recommendations from './Components/Recommendations.js';
+import processData from './Utils/dataProcessor';
+import { fetchCategories, fetchProductsData, fetchWorkspaces, fetchRoomData, } from './Utils/dataFetchers';
 
 const ProductPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('Furniture');
@@ -13,156 +14,57 @@ const ProductPage = () => {
     const [selectedSubCategory1, setSelectedSubCategory1] = useState('');
     const [selectedProducts, setSelectedProducts] = useState([]);
 
-    const [selectedCategory2, setSelectedCategory2] = useState('Table');
-    const [selectedTable, setSelectedTable] = useState(null);
-    const [selectedChair, setSelectedChair] = useState(null);
     const [categories, setCategories] = useState([]);
     const [productsData, setProductData] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [workspaces, setWorkspaces] = useState([]);
+    const [roomData, setRoomData] = useState({ quantityData: [], areasData: [] });
+
+    const [quantityData, setQuantityData] = useState([]);
+    const [areasData, setAreasData] = useState([]);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [priceRange, setPriceRange] = useState([1000, 15000]);
 
-    const handleSubCategory1Change = (subCategory) => {
-        setSelectedSubCategory1(subCategory);
-    };
-
-    async function fetchCategories() {
-        try {
-            const { data, error } = await supabase
-                .from('categories')
-                .select('id, name, subcategories');
-
-            if (error) {
-                console.error('Error fetching categories:', error);
-                return;
-            }
-
-            const formattedData = data
-                .map((item) => ({
-                    id: item.id,
-                    category: item.name,
-                    subcategories: JSON.parse(item.subcategories || '[]'),
-                }))
-                .sort((a, b) => a.id - b.id);
-
-            setCategories(formattedData);
-
-            // Automatically select the first category and subcategory
-            if (formattedData.length > 0) {
-                setSelectedCategory(formattedData[0].category);
-                setSelectedSubCategory(formattedData[0].subcategories[0] || null);
-            }
-        } catch (err) {
-            console.error('Unexpected error:', err);
-            return [];
-        }
-    }
-
-
-    async function fetchProductsData() {
-        try {
-            const { data, error } = await supabase
-                .from("products")
-                .select(`
-                        *,
-                        addons(*,
-                            addon_variants(*)
-                        ),
-                        product_variants (*)
-                    `);
-
-            if (error) throw error;
-
-            // Flatten all images from products, addons, and product_variants
-            const allImages = data.flatMap(product => [
-                ...product.product_variants.map(variant => variant.image),
-                ...product.addons.flatMap(addon => [
-                    addon.image,
-                    ...addon.addon_variants.map(variant => variant.image)
-                ])
-            ]).filter(Boolean); // Remove null or undefined images
-
-            const uniqueImages = [...new Set(allImages)];
-
-            const { data: signedUrls, error: signedUrlError } = await supabase.storage
-                .from("addon")
-                .createSignedUrls(uniqueImages, 3600);
-
-            if (signedUrlError) throw signedUrlError;
-
-            const urlMap = Object.fromEntries(signedUrls.map(item => [item.path, item.signedUrl]));
-
-            const processedData = data.map(product => ({
-                ...product,
-                product_variants: product.product_variants.map(variant => ({
-                    ...variant,
-                    image: urlMap[variant.image] || ''
-                })),
-                addons: product.addons.map(addon => ({
-                    ...addon,
-                    image: urlMap[addon.image] || '',
-                    addon_variants: addon.addon_variants.map(variant => ({
-                        ...variant,
-                        image: urlMap[variant.image] || ''
-                    }))
-                }))
-            }));
-
-            setProductData(processedData);
-        } catch (error) {
-            console.error('Error fetching products data:', error);
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    // Fetch workspaces data (Not used in the current version of the component)
-    async function fetchWorkspaces() {
-        try {
-            const { data: workspacesData, error: workspacesError } = await supabase
-                .from('workspaces')
-                .select();
-
-            if (workspacesError) {
-                console.error('Error fetching workspaces:', workspacesError.message);
-                return;
-            }
-
-        } catch (error) {
-            console.error('Error fetching workspaces:', error.message);
-        }
-    }
-
-    // Fetch room data (Not used in the current version of the component)
-    async function fetchRoomData() {
-        try {
-            const { data: quantityData, error: quantityError } = await supabase
-                .from('quantity')
-                .select()
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            if (quantityError) throw quantityError;
-
-            const { data: areasData, error: areasError } = await supabase
-                .from('areas')
-                .select()
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            if (areasError) throw areasError;
-
-            // console.log("Quantity Data", quantityData);
-            // console.log("Areas Data", areasData);
-        } catch (error) {
-            console.error('Error fetching room data:', error);
-        }
-    }
-
-    // useEffect to fetch all required data on component mount
     useEffect(() => {
-        Promise.all([fetchCategories(), fetchProductsData(), fetchWorkspaces(), fetchRoomData()]);
+        const loadData = async () => {
+            const [categoriesData, productsData, workspacesData, roomDataResult] = await Promise.all([
+                fetchCategories(), fetchProductsData(), fetchWorkspaces(), fetchRoomData(),]);
+
+            setCategories(categoriesData);
+
+            if (categoriesData.length > 0) {
+                setSelectedCategory(categoriesData[0].category);
+                setSelectedSubCategory(categoriesData[0].subcategories[0] || null);
+            }
+
+            setProductData(productsData);
+            setWorkspaces(workspacesData);
+            setRoomData(roomDataResult);
+        };
+
+        loadData();
     }, []);
+
+    useEffect(() => {
+        if (roomData.quantityData && roomData.quantityData.length > 0) {
+            const processedQuantityData = processData(roomData.quantityData, "quantity");
+            if (processedQuantityData) {
+                setQuantityData([processedQuantityData]);
+            }
+        }
+
+        if (roomData.areasData && roomData.areasData.length > 0) {
+            const processedAreasData = processData(roomData.areasData, "areas");
+            if (processedAreasData) {
+                setAreasData([processedAreasData]);
+            }
+        }
+    }, [roomData]);
+
+    // useEffect(() => {
+    //     console.log("Areas Data: ", areasData);
+    //     console.log("Quantity Data: ", quantityData);
+    // }, [areasData, quantityData]);
 
     // Filter products based on search query, price range, and category
     const filteredProducts = useMemo(() => {
@@ -208,9 +110,9 @@ const ProductPage = () => {
         return grouped;
     }, [filteredProducts]);
 
-    const totalCategories = 2;
-    const selectedCategoriesCount = (selectedTable ? 1 : 0) + (selectedChair ? 1 : 0);
-    const progressPercentage = Math.round((selectedCategoriesCount / totalCategories) * 100);
+    const handleSubCategory1Change = (subCategory) => {
+        setSelectedSubCategory1(subCategory);
+    };
 
     const handleSelectSubCategory = (category, subcategory) => {
         setSelectedCategory(category);
@@ -235,11 +137,8 @@ const ProductPage = () => {
     };
 
     const calculateProgress = () => {
-        const totalCategories = Object.keys(groupedProducts).reduce(
-            (count, category) =>
-                count + Object.keys(groupedProducts[category]).length,
-            0
-        );
+        const totalCategories = Object.keys(groupedProducts).reduce((count, category) =>
+            count + Object.keys(groupedProducts[category]).length, 0);
         return (selectedProducts.length / totalCategories) * 100;
     };
 
@@ -247,25 +146,22 @@ const ProductPage = () => {
         <div>
             <ProgressBar progressPercentage={calculateProgress()} />
             <div className="product-page flex justify-between mt-8">
-                <Sidebar categories={categories}
-                    selectedCategory={selectedCategory}
-                    selectedSubCategory={selectedSubCategory}
-                    onSelectSubCategory={handleSelectSubCategory}
-                />
+                <Sidebar categories={categories} selectedCategory={selectedCategory}
+                    selectedSubCategory={selectedSubCategory} onSelectSubCategory={handleSelectSubCategory} />
                 <div>
                     <CategoryButtons selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} onSubCategory1Change={handleSubCategory1Change} />
                     <main className="main-content flex">
-                        {groupedProducts && <ProductList
-                            products={groupedProducts}
-                            selectedCategory={selectedCategory}
-                            selectedSubCategory={selectedSubCategory}
-                            selectedSubCategory1={selectedSubCategory1}
+                        {groupedProducts && <ProductList products={groupedProducts} selectedCategory={selectedCategory}
+                            selectedSubCategory={selectedSubCategory} selectedSubCategory1={selectedSubCategory1}
                             selectedProduct={selectedProducts.find(
                                 (item) =>
                                     item.category === selectedCategory &&
                                     item.subCategory1 === selectedSubCategory1
                             )}
+                            setSelectedProducts={setSelectedProducts}
                             onProductSelect={handleProductSelect}
+                            quantityData={quantityData}
+                            areasData={areasData}
                         />}
                     </main>
                     <AddonsSection />
