@@ -85,36 +85,51 @@ const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOn
         <h1 className="addons-container overflow-y-auto mt-4">Addon Price: {addonPrice}</h1>
 
         {/* Add-Ons Section */}
-        {variant.addOns && variant.addOns.length > 0 && (
+        {product.addons && product.addons.length > 0 ? (
           <div className="addons-container overflow-y-auto mt-4">
             <h3 className="text-sm font-semibold mb-2">ADD-ONS</h3>
-            {variant.addOns.map((addon) => (
+            {product.addons.map((addon) => (
               <div key={addon.id} className="addon-item text-sm mb-3">
-                <h4>{addon.title}</h4>
-                {addon.addon_variants.map((variant) => (
-                  <div key={variant.id} className="addon-variant flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`addon-${variant.id}`}
-                      checked={!!selectedAddOns[variant.title]} // Check if the add-on is selected
-                      onChange={(e) => handleAddOnChange(variant, e.target.checked, addon.title)}
-                    />
-                    <label htmlFor={`addon-${variant.id}`} className="ml-2 flex items-center">
-                      <img
-                        src={variant.image || variant.title} // Fallback for missing image
-                        alt={variant.title}
-                        className="addon-image w-10 h-10 object-cover"
+                {/* Add-On Title */}
+                <h4>{addon?.title || "Untitled Add-On"}</h4>
+
+                {/* Add-On Variants */}
+                {Array.isArray(addon.addon_variants) && addon.addon_variants.length > 0 ? (
+                  addon.addon_variants.map((variant) => (
+                    <div key={variant.id || Math.random()} className="addon-variant flex items-center mb-2">
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        id={`addon-${variant.id || Math.random()}`}
+                      // checked={!!selectedAddOns[variant.title]} // Check state
+                      // onChange={(e) => handleAddOnChange(variant, e.target.checked, addon?.title)}
                       />
-                      <div className="text-xs ml-2">
-                        <h6 className="font-semibold">{variant.title}</h6>
-                        <p>Price: ₹{variant.price}</p>
-                      </div>
-                    </label>
-                  </div>
-                ))}
+
+                      {/* Variant Details */}
+                      <label htmlFor={`addon-${variant.id || Math.random()}`} className="ml-2 flex items-center">
+                        {/* Variant Image */}
+                        <img
+                          src={variant?.image || "default-image.png"} // Fallback image
+                          alt={variant?.title || "Untitled Variant"}
+                          className="addon-image w-10 h-10 object-cover"
+                        />
+
+                        {/* Variant Info */}
+                        <div className="text-xs ml-2">
+                          <h6 className="font-semibold">{variant?.title || "Untitled Variant"}</h6>
+                          <p>Price: ₹{variant?.price || 0}</p>
+                        </div>
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p>No variants available for this add-on</p>
+                )}
               </div>
             ))}
           </div>
+        ) : (
+          <p>No add-ons available for this product</p>
         )}
 
         {/* Total Price Section */}

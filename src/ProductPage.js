@@ -24,6 +24,8 @@ const ProductPage = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [priceRange, setPriceRange] = useState([1000, 15000]);
+    const [selectedData, setSelectedData] = useState([])
+    const [selectedAddOns, setSelectedAddOns] = useState([])
 
     useEffect(() => {
         const loadData = async () => {
@@ -142,7 +144,31 @@ const ProductPage = () => {
             count + Object.keys(groupedProducts[category]).length, 0);
         return (selectedProducts.length / totalCategories) * 100;
     };
+    const handleAddOnChange = (variant, isChecked) => {
+        // Ensure the variant object has title, price, and image
+        if (!variant || !variant.title || variant.price == null || !variant.image) return;
 
+        setSelectedAddOns((prevSelectedAddOns) => {
+            if (isChecked) {
+                // Add the selected add-on with separate fields for title, price, and image
+                return {
+                    ...prevSelectedAddOns,
+                    [variant.title]: {
+                        addon_title: variant.title || "No Title", // Store the title of the add-on
+                        addon_price: variant.price || "No Price", // Store the price of the add-on
+                        addon_image: variant.image || "No Image", // Store the image of the add-on
+                        addonId: variant.addonid || "No Id",
+                        variantID: variant.id || "No Id",
+                    }
+                };
+            } else {
+                // Remove the unselected add-on by title
+                const { [variant.title]: _, ...rest } = prevSelectedAddOns;
+                return rest;
+            }
+        });
+    };
+    console.log("selected addons", selectedAddOns)
     return (
         <div>
             <ProgressBar progressPercentage={calculateProgress()} />
@@ -163,9 +189,25 @@ const ProductPage = () => {
                             onProductSelect={handleProductSelect}
                             quantityData={quantityData}
                             areasData={areasData}
+                            selectedAddOns={selectedAddOns}
                         />}
                     </main>
-                    <AddonsSection />
+                    {filteredProducts.map((product) => {
+                        // Only render the AddonsSection if product's subcategory1 matches the selected one
+                        if (product.subcategory1 === selectedSubCategory1) {
+                            console.log("subcat1 to addon section", selectedSubCategory1)
+                            return (
+                                <div key={product.id}>
+                                    {/* Render AddonsSection only once per product */}
+                                    <AddonsSection product={product}
+                                        handleAddOnChange={handleAddOnChange}
+                                        selectedSubCategory={selectedSubCategory}
+                                    />
+                                </div>
+                            );
+                        }
+                        return null; // Return nothing if subcategory1 doesn't match
+                    })}
                 </div>
                 <Recommendations />
             </div>

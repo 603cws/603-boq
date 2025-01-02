@@ -3,7 +3,7 @@ import Modal from './Modal';
 import InfoButton from './InfoButton.js';
 import { CalculateVariantPrice } from '../Utils/CalulateVariantPrice.js';
 
-const ProductCard = ({ product, variant, additionalImages, isSelected, handleSelect, selectedCategory, selectedSubCategory, quantityData, areasData }) => {
+const ProductCard = ({ product, variant, additionalImages, isSelected, handleSelect, selectedCategory, selectedSubCategory, quantityData, areasData, handelSelectedData, selectedSubCategory1 }) => {
     const [mainImageHovered, setMainImageHovered] = useState(false); // For main image hover effect
     const [showModal, setShowModal] = useState(false); // For modal visibility
     const [hoveredImage, setHoveredImage] = useState(null); // For additional image hover effect
@@ -76,7 +76,7 @@ const ProductCard = ({ product, variant, additionalImages, isSelected, handleSel
                         <button
                             onClick={(e) => {
                                 e.stopPropagation(); // Prevents modal from opening
-                                handleSelect(product, variant);
+                                handelSelectedData(product, variant, selectedCategory, selectedSubCategory, selectedSubCategory1)
                             }}
                             className={`mt-4 px-4 py-1 rounded text-white text-xs ${isSelected ? 'bg-orange-500' : 'bg-blue-500 hover:bg-blue-600'
                                 }`}
