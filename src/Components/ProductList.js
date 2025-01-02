@@ -23,7 +23,7 @@ const ProductList = ({ products, selectedCategory, selectedSubCategory, selected
 
     const handleSelect = (product, variant) => {
         // Update selected product in local storage
-        const updatedSelection = { category: selectedCategory, subCategory1: selectedSubCategory1, product: variant };
+        const updatedSelection = { category: selectedCategory, subCategory: selectedSubCategory, subCategory1: selectedSubCategory1, product: variant };
         localStorage.setItem('selectedProducts', JSON.stringify(updatedSelection));
 
         // Trigger the callback for updating state

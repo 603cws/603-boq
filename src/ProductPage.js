@@ -125,6 +125,7 @@ const ProductPage = () => {
             const updatedSelection = prevSelected.filter(
                 (item) =>
                     item.category !== product.category ||
+                    item.subCategory !== product.subCategory ||
                     item.subCategory1 !== product.subCategory1
             );
             updatedSelection.push({

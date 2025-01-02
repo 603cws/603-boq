@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Modal.css";
 import InfoButton from './InfoButton.js';
-import { CalculateVariantPrice } from '../Utils/CalulateVariantPrice.js';
+import { CalculateVariantPrice, CalculateAddonPrice } from '../Utils/CalulateVariantPrice.js';
 
 const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOnChange, calculateTotalPrice, handleDoneClick, product, selectedCategory, selectedSubCategory, quantityData, areasData }) => {
   const [hoveredImage, setHoveredImage] = useState(variant.image); // Default to main image
+  const [variantPrice, setVariantPrice] = useState(CalculateVariantPrice(selectedCategory, selectedSubCategory, variant.price, quantityData, areasData));
+  const [addonPrice, setAddonPrice] = useState(CalculateAddonPrice(selectedCategory, selectedSubCategory, 1234, quantityData, areasData)); //addon price is hardcoded for now
   const baseImageUrl = 'https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/';
 
   // Ensure hovered image resets when variant changes
@@ -75,18 +77,12 @@ const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOn
               <p className="text-xs text-wrap">{variant.details}</p>
 
               {/* Product Price */}
-              <p className="font-semibold text-sm mt-2">Price: ₹{CalculateVariantPrice(selectedCategory, selectedSubCategory, variant.price, quantityData, areasData)}</p>
-              <InfoButton
-                selectedCategory={selectedCategory}
-                selectedSubCategory={selectedSubCategory}
-                quantityData={quantityData}
-                areasData={areasData}
-                variant={variant}
-                price={variant.price}
-              />
+              <p className="font-semibold text-sm mt-2">Price: ₹{variantPrice}</p>
             </div>
           </div>
         </div>
+
+        <h1 className="addons-container overflow-y-auto mt-4">Addon Price: {addonPrice}</h1>
 
         {/* Add-Ons Section */}
         {variant.addOns && variant.addOns.length > 0 && (
@@ -124,15 +120,19 @@ const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOn
         {/* Total Price Section */}
         <div className="absolute bottom-5 right-10 w-72 flex justify-between bg-white p-3 rounded-md shadow-lg">
           <div>
-            <h4 className="font-semibold text-sm">Price: ₹{variant.price}</h4>
+            <h4 className="font-semibold text-sm">Price: ₹{variantPrice + addonPrice}</h4>
+            <InfoButton
+              selectedCategory={selectedCategory}
+              selectedSubCategory={selectedSubCategory}
+              quantityData={quantityData}
+              areasData={areasData}
+              variant={variant}
+              price={variant.price}
+              showTotal={true}
+            />
             {/* <h4 className="font-semibold text-sm">Total Price: ₹{calculateTotalPrice()}</h4> */}
           </div>
-          <button
-            className="done-button bg-blue-500 text-white py-2 px-4 rounded"
-            onClick={handleDoneClick}
-          >
-            Done
-          </button>
+          <button className="done-button bg-blue-500 text-white py-2 px-4 rounded" onClick={handleDoneClick}>Done</button>
         </div>
       </div>
     </div>

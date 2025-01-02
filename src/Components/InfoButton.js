@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { calculateTotalPriceHelper } from '../Utils/CalculateTotalPriceHelper';
 import { normalizeKey } from '../Utils/CalculateTotalPriceHelper';
 
-const InfoButton = ({ selectedCategory, selectedSubCategory, quantityData, areasData, variant, price }) => {
+const InfoButton = ({ selectedCategory, selectedSubCategory, quantityData, areasData, variant, price, showTotal = false }) => {
     const [showInfo, setShowInfo] = useState(false);
 
     const findClosestKey = (targetKey, dataObject) => {
@@ -49,6 +49,15 @@ const InfoButton = ({ selectedCategory, selectedSubCategory, quantityData, areas
                         {details.area > 0 && <p>Area: {details.area}</p>}
                         <p>Unit Price: ₹{details.price}</p>
                         <p>Total: ₹{calculateTotalPrice()}</p>
+                    </div>
+                )}
+                {showTotal && showInfo && (
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-gray-100 text-gray-700 text-xs p-2 rounded shadow-lg z-10">
+                        {details.quantity > 0 && <p>Quantity: {details.quantity}</p>}
+                        {details.area > 0 && <p>Area: {details.area}</p>}
+                        <p>Product Price: ₹{details.price} / pp</p>
+                        <p>Addon Price: ₹{1234} / pp</p>       {/*Addon Price*/}
+                        <p>Total: ₹{(details.price + 1234) * (details.quantity > 0 && details.quantity || details.area > 0 && details.area)}</p>
                     </div>
                 )}
             </div>
