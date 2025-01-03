@@ -178,11 +178,71 @@ const ProductPage = () => {
     };
     console.log("selected addons", selectedAddOns);
 
+    const handelSelectedData = (product, variant, category, subCat, subcategory1) => {
+        if (!product || !variant) return;
+
+        // Unique group key to ensure only one selection per group
+        const groupKey = `${category}-${subCat}`;
+
+        const productData = {
+            groupKey, // For group-level management
+            id: product.id,
+            category,
+            subcategory: subCat,
+            subcategory1, // added subcategory1 as an argument
+            product_variant: {
+                variant_title: variant.title,
+                variant_image: variant.image,
+                variant_details: variant.details,
+                variant_price: variant.price,
+                variant_id: variant.id,
+                additional_images: JSON.parse(variant.additional_images || "[]"), // Parse the string to an array
+            },
+            addons: selectedAddOns || [], // Assuming addons might be optional
+        };
+
+        // Update selectedData to replace any existing product in the group
+        setSelectedData((prevData) => {
+            // Check if there's already a product with the same category and subcategory
+            const existingProduct = prevData.find(item =>
+                item.category === category &&
+                item.subcategory === subCat &&
+                item.subcategory1 === subcategory1 // Include subcategory1 here for the check
+            );
+
+            // If product exists with the same category, subcategory, and subcategory1
+            if (existingProduct) {
+                // If the selected variant is the same, skip addition
+                if (existingProduct.product_variant.variant_id === variant.id) {
+                    console.log("Duplicate product with the same variant detected. Skipping addition.");
+                    return prevData; // Return unchanged data if the variant is the same
+                }
+
+                // Replace the existing product with the new variant if it's a different variant
+                const updatedData = prevData.map(item =>
+                    item.category === category && item.subcategory === subCat && item.subcategory1 === subcategory1
+                        ? productData // Replace the product if the category, subcategory, and subcategory1 are the same
+                        : item
+                );
+
+                localStorage.setItem("selectedData", JSON.stringify(updatedData)); // Persist updated state
+                return updatedData;
+            }
+
+            // If no existing product with the same category, subcategory, and subcategory1, add the new product
+            const updatedData = [...prevData, productData];
+            localStorage.setItem("selectedData", JSON.stringify(updatedData)); // Persist updated state
+            return updatedData;
+        });
+        console.log("Processed group key:", groupKey);
+    };
+    console.log("selected data", selectedData)
+
     return (
         <div>
             <ProgressBar progressPercentage={calculateProgress()} />
             <div className="product-page flex justify-between mt-8">
-                <Sidebar categories={categories} selectedCategory={selectedCategory}
+                <Sidebar className="self-center" categories={categories} selectedCategory={selectedCategory}
                     selectedSubCategory={selectedSubCategory} onSelectSubCategory={handleSelectSubCategory} />
                 <div>
                     <CategoryButtons selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} onSubCategory1Change={handleSubCategory1Change} />
@@ -199,26 +259,39 @@ const ProductPage = () => {
                             quantityData={quantityData}
                             areasData={areasData}
                             selectedAddOns={selectedAddOns}
+                            handelSelectedData={handelSelectedData}
+                            handleAddOnChange={handleAddOnChange}
                         />}
                     </main>
-                    {filteredProducts.map((product) => {
-                        // Only render the AddonsSection if product's subcategory1 matches the selected one
-                        if (product.subcategory1 === selectedSubCategory1) {
-                            console.log("subcat1 to addon section", selectedSubCategory1)
-                            return (
-                                <div key={product.id}>
-                                    {/* Render AddonsSection only once per product */}
-                                    <AddonsSection product={product}
-                                        handleAddOnChange={handleAddOnChange}
-                                        selectedSubCategory={selectedSubCategory}
-                                    />
-                                </div>
-                            );
-                        }
-                        return null; // Return nothing if subcategory1 doesn't match
-                    })}
+                    {filteredProducts.map((product) =>
+                        product.subcategory1 === selectedSubCategory1 ? (
+                            <AddonsSection
+                                key={product.id} // Use key directly on AddonsSection
+                                product={product}
+                                handleAddOnChange={handleAddOnChange}
+                                selectedSubCategory={selectedSubCategory}
+                            />
+                        ) : null
+                    )}
                 </div>
-                <Recommendations />
+                {filteredProducts.some(
+                    (product) => product.subcategory1 === selectedSubCategory1 && product.addons?.length > 0
+                ) ? (
+                    <div>
+                        {filteredProducts
+                            .filter((product) => product.subcategory1 === selectedSubCategory1)
+                            .map((product) => (
+                                <Recommendations
+                                    key={product.id}
+                                    product={product}
+                                    handleAddOnChange={handleAddOnChange}
+                                    selectedSubCategory={selectedSubCategory}
+                                />
+                            ))}
+                    </div>
+                ) : (
+                    <div className="invisible w-64"></div> // Invisible placeholder to maintain layout
+                )}
             </div>
         </div>
     );

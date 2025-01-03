@@ -13,6 +13,9 @@ const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOn
   useEffect(() => {
     setHoveredImage(variant.image);
   }, [variant]);
+  if (!product.addons || product.addons.length === 0) {
+    return null; // Return nothing if there are no addons
+  }
 
   // Parse additional images safely
   // const additional_Images = (() => {
@@ -80,57 +83,58 @@ const Modal = ({ onClose, variant, additionalImages, selectedAddOns, handleAddOn
               <p className="font-semibold text-sm mt-2">Price: ₹{variantPrice}</p>
             </div>
           </div>
-        </div>
+          {/* <h1 className="addons-container overflow-y-auto mt-4">Addon Price: {addonPrice}</h1> */}
 
-        <h1 className="addons-container overflow-y-auto mt-4">Addon Price: {addonPrice}</h1>
+          {/* Add-Ons Section */}
+          {/* Add-Ons Section */}
+          {product.addons && product.addons.length > 0 ? (
+            <div className="addons-container overflow-y-auto mt-4">
+              <h3 className="text-sm font-semibold mb-2">ADD-ONS</h3>
+              {product.addons
+                .filter((addon) => Array.isArray(addon.addon_variants) && addon.addon_variants.length > 0) // Filter add-ons with variants
+                .map((addon) => (
+                  <div key={addon.id} className="addon-item text-sm mb-3">
+                    {/* Add-On Title */}
+                    <h4>{addon?.title || "Untitled Add-On"}</h4>
 
-        {/* Add-Ons Section */}
-        {product.addons && product.addons.length > 0 ? (
-          <div className="addons-container overflow-y-auto mt-4">
-            <h3 className="text-sm font-semibold mb-2">ADD-ONS</h3>
-            {product.addons.map((addon) => (
-              <div key={addon.id} className="addon-item text-sm mb-3">
-                {/* Add-On Title */}
-                <h4>{addon?.title || "Untitled Add-On"}</h4>
-
-                {/* Add-On Variants */}
-                {Array.isArray(addon.addon_variants) && addon.addon_variants.length > 0 ? (
-                  addon.addon_variants.map((variant) => (
-                    <div key={variant.id || Math.random()} className="addon-variant flex items-center mb-2">
-                      {/* Checkbox */}
-                      <input
-                        type="checkbox"
-                        id={`addon-${variant.id || Math.random()}`}
-                      // checked={!!selectedAddOns[variant.title]} // Check state
-                      // onChange={(e) => handleAddOnChange(variant, e.target.checked, addon?.title)}
-                      />
-
-                      {/* Variant Details */}
-                      <label htmlFor={`addon-${variant.id || Math.random()}`} className="ml-2 flex items-center">
-                        {/* Variant Image */}
-                        <img
-                          src={variant?.image || "default-image.png"} // Fallback image
-                          alt={variant?.title || "Untitled Variant"}
-                          className="addon-image w-10 h-10 object-cover"
+                    {/* Add-On Variants */}
+                    {addon.addon_variants.map((variant) => (
+                      <div key={variant.id || Math.random()} className="addon-variant flex items-center mb-2">
+                        {/* Checkbox */}
+                        <input
+                          type="checkbox"
+                          id={`addon-${variant.id || Math.random()}`}
+                          // checked={!!selectedAddOns[variant.title]} // Check state
+                          onChange={(e) => handleAddOnChange(variant, e.target.checked, addon?.title)}
                         />
 
-                        {/* Variant Info */}
-                        <div className="text-xs ml-2">
-                          <h6 className="font-semibold">{variant?.title || "Untitled Variant"}</h6>
-                          <p>Price: ₹{variant?.price || 0}</p>
-                        </div>
-                      </label>
-                    </div>
-                  ))
-                ) : (
-                  <p>No variants available for this add-on</p>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No add-ons available for this product</p>
-        )}
+                        {/* Variant Details */}
+                        <label htmlFor={`addon-${variant.id || Math.random()}`} className="ml-2 flex items-center">
+                          {/* Variant Image */}
+                          <img
+                            src={variant?.image || "default-image.png"} // Fallback image
+                            alt={variant?.title || "Untitled Variant"}
+                            className="addon-image w-10 h-10 object-cover"
+                          />
+
+                          {/* Variant Info */}
+                          <div className="text-xs ml-2">
+                            <h6 className="font-semibold">{variant?.title || "Untitled Variant"}</h6>
+                            <p>Price: ₹{variant?.price || 0}</p>
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <p>No add-ons available for this product</p>
+          )}
+
+        </div>
+
+
 
         {/* Total Price Section */}
         <div className="absolute bottom-5 right-10 w-72 flex justify-between bg-white p-3 rounded-md shadow-lg">
