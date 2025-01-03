@@ -24,20 +24,24 @@ const ProductList = ({ products, selectedCategory, selectedSubCategory, selected
         return <p>No products found in subcategory "{selectedSubCategory1}".</p>;
     }
 
-    const handleSelect = (product, variant) => {
-        // Update selected product in local storage
-        const updatedSelection = { category: selectedCategory, subCategory: selectedSubCategory, subCategory1: selectedSubCategory1, product: variant };
-        localStorage.setItem('selectedProducts', JSON.stringify(updatedSelection));
+    // const handleSelect = (product, variant) => {
+    //     // Update selected product in local storage
+    //     const updatedSelection = { category: selectedCategory, subCategory: selectedSubCategory, subCategory1: selectedSubCategory1, product: variant };
+    //     localStorage.setItem('selectedProducts', JSON.stringify(updatedSelection));
 
-        // Trigger the callback for updating state
-        onProductSelect(updatedSelection);
-    };
+    //     // Trigger the callback for updating state
+    //     onProductSelect(updatedSelection);
+    // };
 
     const handelSelectedData = (product, variant, category, subCat, subcategory1) => {
         if (!product || !variant) return;
 
         // Unique group key to ensure only one selection per group
-        const groupKey = `${category}-${subCat}`;
+        const groupKey = `${category}-${subCat}-${subcategory1}`;
+
+        const addonKey = Object.keys(selectedAddOns)[0]; // Get the first key, e.g., "Addon grass"
+        const productID = selectedAddOns[addonKey]?.productID;
+        console.log("Product ID:", productID);
 
         const productData = {
             groupKey, // For group-level management
@@ -53,7 +57,7 @@ const ProductList = ({ products, selectedCategory, selectedSubCategory, selected
                 variant_id: variant.id,
                 additional_images: JSON.parse(variant.additional_images || "[]"), // Parse the string to an array
             },
-            addons: selectedAddOns || [], // Assuming addons might be optional
+            addons: variant.product_id === productID ? selectedAddOns : [], // Conditional logic
         };
 
         // Update selectedData to replace any existing product in the group
@@ -110,8 +114,8 @@ const ProductList = ({ products, selectedCategory, selectedSubCategory, selected
                                 product={product}
                                 variant={variant}
                                 additionalImages={additionalImagesArray}
-                                isSelected={selectedProduct?.product.id === variant.id}
-                                handleSelect={handleSelect}
+                                isSelected={selectedData[0]?.product_variant?.variant_id === variant.id}
+                                // handleSelect={handleSelect}
                                 selectedCategory={selectedCategory}
                                 selectedSubCategory={selectedSubCategory}
                                 selectedSubCategory1={selectedSubCategory1}

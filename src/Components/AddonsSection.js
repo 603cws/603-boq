@@ -15,21 +15,20 @@ const AddonsSection = ({ product, selectedSubCategory, handleAddOnChange }) => {
             ) && (
                     <>
                         <aside className="addons mt-8 p-4 bg-gray-100 rounded-lg">
-
                             <h2 className="text-green-600 text-xl font-semibold mb-4">Addons Section</h2>
                             <div className="addons-container overflow-y-auto mt-4">
+                                <h3 className="text-sm font-semibold mb-2">ADD-ONS</h3>
                                 {product.addons.map((addon) => {
                                     if (addon.addon_variants && addon.addon_variants.length > 0) {
                                         return (
                                             <div key={addon.id} className="addon-item text-sm mb-3">
-                                                <h3 className="text-sm font-semibold mb-2">ADD-ONS</h3>
                                                 <h4>{addon.title}</h4>
                                                 {addon.addon_variants.map((variant) => (
                                                     <div key={variant.id} className="addon-variant flex items-center">
                                                         <input
                                                             type="checkbox"
                                                             id={`addon-${variant.id}`}
-                                                            onChange={(e) => handleAddOnChange(variant, e.target.checked, addon?.title)}
+                                                            onChange={(e) => handleAddOnChange(variant, e.target.checked, product, addon?.productid)}
                                                         />
                                                         <label htmlFor={`addon-${variant.id}`} className="ml-2 flex items-center">
                                                             <img

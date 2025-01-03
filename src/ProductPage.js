@@ -144,14 +144,17 @@ const ProductPage = () => {
             count + Object.keys(groupedProducts[category]).length, 0);
         return (selectedProducts.length / totalCategories) * 100;
     };
-    const handleAddOnChange = (variant, isChecked) => {
+    const handleAddOnChange = (variant, isChecked, product, productId) => {
         // Ensure the variant object has title, price, and image
         if (!variant || !variant.title || variant.price == null || !variant.image) return;
 
+        if (product.id !== productId) return;
+
         setSelectedAddOns((prevSelectedAddOns) => {
+            let updatedAddOns;
             if (isChecked) {
                 // Add the selected add-on with separate fields for title, price, and image
-                return {
+                updatedAddOns = {
                     ...prevSelectedAddOns,
                     [variant.title]: {
                         addon_title: variant.title || "No Title", // Store the title of the add-on
@@ -159,16 +162,22 @@ const ProductPage = () => {
                         addon_image: variant.image || "No Image", // Store the image of the add-on
                         addonId: variant.addonid || "No Id",
                         variantID: variant.id || "No Id",
+                        productID: productId || "No Id",
                     }
                 };
             } else {
                 // Remove the unselected add-on by title
                 const { [variant.title]: _, ...rest } = prevSelectedAddOns;
-                return rest;
+                updatedAddOns = rest;
             }
+            // Store the updated add-ons in localStorage
+            localStorage.setItem("selectedAddOns", JSON.stringify(updatedAddOns));
+
+            return updatedAddOns;
         });
     };
-    console.log("selected addons", selectedAddOns)
+    console.log("selected addons", selectedAddOns);
+
     return (
         <div>
             <ProgressBar progressPercentage={calculateProgress()} />

@@ -1,25 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
+import QuestionModal from './questionModal';
 
 const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1Change }) => {
     const [subCat1, setSubCat1] = useState({});
     const [selectedSubCategory1, setSelectedSubCategory1] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [question1, setQuestion1] = useState('');
+    const [question2, setQuestion2] = useState('');
+    const [canDisplaySubCategories, setCanDisplaySubCategories] = useState(false);
 
     useEffect(() => {
         fetchCategories();
     }, []);
 
     useEffect(() => {
-        // Automatically set the first subcategory of the selected category
-        if (selectedCategory && subCat1[selectedCategory]?.length > 0) {
-            setSelectedSubCategory1(subCat1[selectedCategory][0]); // Default to the first subcategory
-        } else {
-            setSelectedSubCategory1(null); // Clear if no subcategories exist
+        if (selectedCategory) {
+            if (selectedCategory === 'Flooring') {
+                setShowModal(true);
+                setCanDisplaySubCategories(false);
+            } else {
+                setShowModal(false);
+                setCanDisplaySubCategories(true);
+            }
         }
-    }, [selectedCategory, subCat1]);
+    }, [selectedCategory]);
 
     useEffect(() => {
-        // Notify the parent whenever selectedSubCategory1 changes
+        if (canDisplaySubCategories && selectedCategory && subCat1[selectedCategory]?.length > 0) {
+            setSelectedSubCategory1(subCat1[selectedCategory][0]);
+        } else {
+            setSelectedSubCategory1(null);
+        }
+    }, [selectedCategory, canDisplaySubCategories, subCat1]);
+
+    useEffect(() => {
         if (onSubCategory1Change) {
             onSubCategory1Change(selectedSubCategory1);
         }
@@ -36,7 +51,6 @@ const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1
                 return;
             }
 
-            // Transform data into key-value pairs
             const transformedData = data.reduce((acc, item) => {
                 acc[item.name] = item.subCat1 ? JSON.parse(item.subCat1) : [];
                 return acc;
@@ -48,21 +62,26 @@ const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1
         }
     }
 
+    const handleModalSubmit = () => {
+        if (question1 && question2) {
+            setCanDisplaySubCategories(true);
+            setShowModal(false);
+        } else {
+            alert('Please answer both questions.');
+        }
+    };
+
     const renderSubCategoryButtons = () => {
-        const subCategories = subCat1[selectedCategory] || []; // Get subcategories for the selected category
+        const subCategories = subCat1[selectedCategory] || [];
 
         return subCategories.map((subCat) => (
             <button
                 key={subCat}
                 onClick={() => setSelectedSubCategory1(subCat)}
-                style={{
-                    padding: '0.5rem 1rem',
-                    border: 'none',
-                    backgroundColor: selectedSubCategory1 === subCat ? '#4CAF50' : '#ddd',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    margin: '0.5rem',
-                }}
+                className={`py-2 px-4 rounded ${selectedSubCategory1 === subCat
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 text-black hover:bg-gray-300'
+                    } transition duration-300`}
             >
                 {subCat}
             </button>
@@ -70,11 +89,23 @@ const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1
     };
 
     return (
-        <div style={{ marginTop: '80px', marginBottom: '20px' }}>
-            {/* Subcategory Buttons */}
-            <div className="subcategory-buttons" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                {selectedCategory ? renderSubCategoryButtons() : <p>Select a category to see subcategories</p>}
-            </div>
+        <div className="mt-20 mb-8">
+            {showModal && (
+                <QuestionModal
+                    onSubmit={handleModalSubmit}
+                    question1={question1}
+                    setQuestion1={setQuestion1}
+                    question2={question2}
+                    setQuestion2={setQuestion2}
+                />
+            )}
+            {canDisplaySubCategories ? (
+                <div className="flex flex-wrap gap-4">
+                    {renderSubCategoryButtons()}
+                </div>
+            ) : (
+                <p>Select a category to see subcategories</p>
+            )}
         </div>
     );
 };
