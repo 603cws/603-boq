@@ -26,6 +26,8 @@ const ProductPage = () => {
     const [priceRange, setPriceRange] = useState([1000, 15000]);
     const [selectedData, setSelectedData] = useState([])
     const [selectedAddOns, setSelectedAddOns] = useState([])
+    const [userResponses, setUserResponses] = useState({});
+
 
     useEffect(() => {
         const loadData = async () => {
@@ -176,7 +178,7 @@ const ProductPage = () => {
             return updatedAddOns;
         });
     };
-    console.log("selected addons", selectedAddOns);
+    // console.log("selected addons", selectedAddOns);
 
     const handelSelectedData = (product, variant, category, subCat, subcategory1) => {
         if (!product || !variant) return;
@@ -236,16 +238,47 @@ const ProductPage = () => {
         });
         console.log("Processed group key:", groupKey);
     };
-    console.log("selected data", selectedData)
+    // console.log("selected data", selectedData)
 
+    const handleQuestionSubmit = (answers) => {
+        console.log("Answers from QuestionModal:", answers); // Log submitted answers
+        setUserResponses((prevResponses) => ({
+            ...prevResponses,
+            flooring: answers.flooringStatus,
+            flooringArea: answers.flooringArea,
+            flooringType: answers.flooringType,
+            cabinFlooring: answers.cabinFlooring,
+            hvacType: answers.hvacType,
+            hvacCentralized: answers.hvacCentralized,
+            partitionArea: answers.partitionArea,
+            partitionType: answers.partitionType,
+            // [expandedSubcategory]: answers, // Store answers for the subcategory
+            // [expandedSubcategory]: answers,
+        }));
+
+        // Hide the modal and reset questions state
+        // setShowQuestionModal(false);
+        // setCabinsQuestions(false);
+
+        // setExpandedSubcategory(expandedSubcategory);
+
+        // // Update the total cost or other BOQ data if needed
+        // updateBOQTotal();
+    };
+    console.log("user responces", userResponses)
+    console.log("room data", roomData)
+    console.log("products", productsData)
+    console.log("grouped products", groupedProducts)
     return (
         <div>
             <ProgressBar progressPercentage={calculateProgress()} />
             <div className="product-page flex justify-between mt-8">
                 <Sidebar className="self-center" categories={categories} selectedCategory={selectedCategory}
-                    selectedSubCategory={selectedSubCategory} onSelectSubCategory={handleSelectSubCategory} />
+                    selectedSubCategory={selectedSubCategory} onSelectSubCategory={handleSelectSubCategory}
+                    handleQuestionSubmit={handleQuestionSubmit} setSelectedCategory={setSelectedCategory}
+                />
                 <div>
-                    <CategoryButtons selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} onSubCategory1Change={handleSubCategory1Change} />
+                    <CategoryButtons selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} onSubCategory1Change={handleSubCategory1Change} userResponses={userResponses} />
                     <main className="main-content flex">
                         {groupedProducts && <ProductList products={groupedProducts} selectedCategory={selectedCategory}
                             selectedSubCategory={selectedSubCategory} selectedSubCategory1={selectedSubCategory1}
@@ -261,6 +294,7 @@ const ProductPage = () => {
                             selectedAddOns={selectedAddOns}
                             handelSelectedData={handelSelectedData}
                             handleAddOnChange={handleAddOnChange}
+                            userResponses={userResponses}
                         />}
                     </main>
                     {filteredProducts.map((product) =>

@@ -1,38 +1,71 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ProductCard from './ProductCard';
 
-const ProductList = ({ products, selectedCategory, selectedSubCategory, selectedSubCategory1, selectedProduct, onProductSelect, setSelectedProducts, quantityData, areasData, selectedAddOns, handelSelectedData, handleAddOnChange }) => {
-    const [selectedData, setSelectedData] = useState([])
-    const categoriesWithModal = ['Flooring', 'HVAC', 'Partitions / Ceilings'];   // Array of categories that should show the modal when clicked
-
+const ProductList = ({
+    products,
+    selectedCategory,
+    selectedSubCategory,
+    selectedSubCategory1,
+    selectedProduct,
+    onProductSelect,
+    quantityData,
+    areasData,
+    handelSelectedData,
+    handleAddOnChange,
+    userResponses,
+}) => {
     const baseImageUrl = 'https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/';
     const productsInCategory = products[selectedCategory];
+
+    // Validate category
     if (!productsInCategory) {
         return <p>Category "{selectedCategory}" not found.</p>;
     }
 
     const productsInSubCategory = productsInCategory[selectedSubCategory];
+
+    // Validate subcategory
     if (!productsInSubCategory) {
         return <p>Subcategory "{selectedSubCategory}" not found in category "{selectedCategory}".</p>;
     }
 
-    // Filter products based on selectedSubCategory1
-    const filteredProducts = productsInSubCategory.filter(product => product.subcategory1 === selectedSubCategory1);
+    // Conditional logic for rendering products
+    let filteredProducts = [];
+    if (selectedCategory === 'Flooring' && userResponses.flooringArea === 'allArea') {
+        // Filter products based on the user's flooring type
+        filteredProducts = productsInSubCategory.filter(
+            (product) => product.subcategory1 === userResponses.flooringType
+        );
+    } else if (selectedCategory === 'HVAC' && userResponses.hvacType === 'Centralized') {
+        // Filter products based on the user's HVAC type
+        filteredProducts = productsInSubCategory.filter(
+            (product) => product.subcategory1 === 'Centralized'
+        );
+    } else {
+        // Default filtering based on selectedSubCategory1
+        filteredProducts = productsInSubCategory.filter(
+            (product) => product.subcategory1 === selectedSubCategory1
+        );
+    }
 
+    // Handle case when no products match
     if (filteredProducts.length === 0) {
-        return <p>No products found in subcategory "{selectedSubCategory1}".</p>;
+        return <p>No products found for the selected criteria.</p>;
     }
 
     const handleSelect = (product, variant) => {
         // Update selected product in local storage
-        const updatedSelection = { category: selectedCategory, subCategory: selectedSubCategory, subCategory1: selectedSubCategory1, product: variant };
+        const updatedSelection = {
+            category: selectedCategory,
+            subCategory: selectedSubCategory,
+            subCategory1: selectedSubCategory1,
+            product: variant,
+        };
         localStorage.setItem('selectedProducts', JSON.stringify(updatedSelection));
-
-        // Trigger the callback for updating state
         onProductSelect(updatedSelection);
     };
-
-
+    console.log("selected category in product list", selectedCategory)
+    console.log("filtered products", filteredProducts)
     return (
         <section className="products-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
             <h1>Products in {selectedSubCategory} - {selectedSubCategory1}</h1>
@@ -40,17 +73,17 @@ const ProductList = ({ products, selectedCategory, selectedSubCategory, selected
                 {filteredProducts.map((product, index) =>
                     product.product_variants.map((variant, variantIndex) => {
                         const additionalImagesArray = variant.additional_images
-                            ? JSON.parse(variant.additional_images).map(imageName => `${baseImageUrl}${imageName}`)
+                            ? JSON.parse(variant.additional_images).map(
+                                (imageName) => `${baseImageUrl}${imageName}`
+                            )
                             : [];
-                        // console.log("Product List: ", selectedProduct?.id, variant.id)
-
                         return (
                             <ProductCard
                                 key={`${index}-${variantIndex}`}
                                 product={product}
                                 variant={variant}
                                 additionalImages={additionalImagesArray}
-                                isSelected={selectedProduct?.product.id === variant.id}
+                                isSelected={selectedProduct?.product?.id === variant.id}
                                 handleSelect={handleSelect}
                                 selectedCategory={selectedCategory}
                                 selectedSubCategory={selectedSubCategory}

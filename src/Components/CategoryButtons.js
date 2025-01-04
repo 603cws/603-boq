@@ -1,40 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import QuestionModal from './questionModal';
 
-const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1Change }) => {
+const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1Change, userResponses }) => {
     const [subCat1, setSubCat1] = useState({});
     const [selectedSubCategory1, setSelectedSubCategory1] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [question1, setQuestion1] = useState('');
-    const [question2, setQuestion2] = useState('');
-    const [canDisplaySubCategories, setCanDisplaySubCategories] = useState(false);
 
     useEffect(() => {
         fetchCategories();
     }, []);
 
     useEffect(() => {
+        // Automatically set the first subcategory of the selected category
         if (selectedCategory) {
-            if (selectedCategory === 'Flooring') {
-                setShowModal(true);
-                setCanDisplaySubCategories(false);
-            } else {
-                setShowModal(false);
-                setCanDisplaySubCategories(true);
+            if (selectedCategory === 'Flooring' && userResponses?.flooringArea === 'allArea') {
+                // Set default subcategory for Flooring when 'allArea' is selected
+                setSelectedSubCategory1(userResponses.flooringType);
+            } else if (subCat1[selectedCategory]?.length > 0) {
+                // For other categories, default to the first subcategory
+                setSelectedSubCategory1(subCat1[selectedCategory][0]);
             }
         }
-    }, [selectedCategory]);
+    }, [selectedCategory, subCat1, userResponses]);
 
     useEffect(() => {
-        if (canDisplaySubCategories && selectedCategory && subCat1[selectedCategory]?.length > 0) {
-            setSelectedSubCategory1(subCat1[selectedCategory][0]);
-        } else {
-            setSelectedSubCategory1(null);
-        }
-    }, [selectedCategory, canDisplaySubCategories, subCat1]);
-
-    useEffect(() => {
+        // Notify the parent whenever selectedSubCategory1 changes
         if (onSubCategory1Change) {
             onSubCategory1Change(selectedSubCategory1);
         }
@@ -51,6 +40,7 @@ const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1
                 return;
             }
 
+            // Transform data into key-value pairs
             const transformedData = data.reduce((acc, item) => {
                 acc[item.name] = item.subCat1 ? JSON.parse(item.subCat1) : [];
                 return acc;
@@ -62,26 +52,32 @@ const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1
         }
     }
 
-    const handleModalSubmit = () => {
-        if (question1 && question2) {
-            setCanDisplaySubCategories(true);
-            setShowModal(false);
-        } else {
-            alert('Please answer both questions.');
-        }
-    };
-
     const renderSubCategoryButtons = () => {
-        const subCategories = subCat1[selectedCategory] || [];
+        const subCategories = subCat1[selectedCategory] || []; // Get subcategories for the selected category
 
+        if (selectedCategory === 'Flooring' && userResponses?.flooringArea === 'allArea') {
+            // Show only the button for userResponses.flooringType
+            return subCategories
+                .filter((subCat) => subCat === userResponses.flooringType) // Filter for flooringType
+                .map((subCat) => (
+                    <button
+                        key={subCat}
+                        onClick={() => setSelectedSubCategory1(subCat)}
+                        className={`px-4 py-2 rounded ${selectedSubCategory1 === subCat ? 'bg-green-500 text-white' : 'bg-gray-200'
+                            }`}
+                    >
+                        {subCat}
+                    </button>
+                ));
+        }
+
+        // Render all subcategory buttons for other categories or default case
         return subCategories.map((subCat) => (
             <button
                 key={subCat}
                 onClick={() => setSelectedSubCategory1(subCat)}
-                className={`py-2 px-4 rounded ${selectedSubCategory1 === subCat
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 text-black hover:bg-gray-300'
-                    } transition duration-300`}
+                className={`px-4 py-2 rounded ${selectedSubCategory1 === subCat ? 'bg-green-500 text-white' : 'bg-gray-200'
+                    }`}
             >
                 {subCat}
             </button>
@@ -89,23 +85,11 @@ const CategoryButtons = ({ selectedCategory, setSelectedCategory, onSubCategory1
     };
 
     return (
-        <div className="mt-20 mb-8">
-            {showModal && (
-                <QuestionModal
-                    onSubmit={handleModalSubmit}
-                    question1={question1}
-                    setQuestion1={setQuestion1}
-                    question2={question2}
-                    setQuestion2={setQuestion2}
-                />
-            )}
-            {canDisplaySubCategories ? (
-                <div className="flex flex-wrap gap-4">
-                    {renderSubCategoryButtons()}
-                </div>
-            ) : (
-                <p>Select a category to see subcategories</p>
-            )}
+        <div className="mt-20 mb-5">
+            {/* Subcategory Buttons */}
+            <div className="flex flex-wrap gap-4">
+                {selectedCategory ? renderSubCategoryButtons() : <p>Select a category to see subcategories</p>}
+            </div>
         </div>
     );
 };

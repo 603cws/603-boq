@@ -6,7 +6,7 @@ const AddonsSection = ({ product, selectedSubCategory, handleAddOnChange }) => {
         return null; // Return nothing if there are no addons
     }
 
-    console.log("Inside Addon Section: ", product);
+    // console.log("Inside Addon Section: ", product);
 
     return (
         <div>

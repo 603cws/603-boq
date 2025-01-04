@@ -47,5 +47,5 @@
 
 /* Add class for expanded state */
 .category.expanded .subcategory-list {
-    max-height: 500px; /* A value large enough to accommodate the list height */
+    max-height: 1000px; /* A value large enough to accommodate the list height */
 }
