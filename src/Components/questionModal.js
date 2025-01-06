@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory }) => {
-  console.log("category in question modal", selectedCategory);
   // Map categories to their respective types
   const typeMapping = {
     Flooring: "flooring type",
@@ -14,6 +13,13 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
   const currentType = typeMapping[currentCategory] || "default type";
 
   // Define questions for different scenarios
+  const heightQuestion = [
+    {
+      name: 'officeHeight',
+      label: 'What is the height of your office?',
+      type: 'number',
+    }
+  ]
   const flooringQuestions = [
     {
       name: "flooringStatus",
@@ -23,14 +29,14 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
         { value: "basicTiling", label: "Basic Tiling Done" },
       ],
     },
-    {
-      name: "flooringArea",
-      label: "Do you want the carpet/tile in all area or in selected area?",
-      options: [
-        { value: "allArea", label: "All Area" },
-        { value: "customizeAreas", label: "Customize Areas" },
-      ],
-    },
+    // {
+    //   name: "flooringArea",
+    //   label: "Do you want the carpet/tile in all area or in selected area?",
+    //   options: [
+    //     { value: "allArea", label: "All Area" },
+    //     { value: "customizeAreas", label: "Customize Areas" },
+    //   ],
+    // },
   ];
 
   const cabinRelatedQuestions = [
@@ -70,6 +76,7 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
   const [questions, setQuestions] = useState(flooringQuestions);
   const [answers, setAnswers] = useState({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   // Load saved answers from localStorage when the component mounts
   useEffect(() => {
@@ -108,26 +115,26 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
     localStorage.setItem("answers", JSON.stringify(updatedAnswers));
 
     // Add additional questions dynamically based on answers
-    if (name === "flooringArea" && value === "allArea") {
-      const flooringTypeExists = questions.some(
-        (q) => q.name === "flooringType"
+    if (name === "flooringStatus" && value === "basicTiling") {
+      const flooringExists = questions.some(
+        (q) => q.name === "demolishTile"
       );
-      if (!flooringTypeExists) {
+      if (!flooringExists) {
         const updatedQuestions = [
           ...questions,
           {
-            name: "flooringType",
-            label: "Select flooring type for all areas:",
+            name: "demolishTile",
+            label: "Do you want to demolish the existing tile?",
             options: [
-              { value: "Carpet", label: "Carpet" },
-              { value: "Tile", label: "Tile" },
-              { value: "Vinyl", label: "Vinyl" },
+              { value: "yes", label: "Yes" },
+              { value: "no", label: "No" },
             ],
           },
         ];
         setQuestions(updatedQuestions);
       }
-    } else if (name === "hvacType" && value === "Centralized") {
+    }
+    else if (name === "hvacType" && value === "Centralized") {
       const hvacCombExists = questions.some(
         (q) => q.name === "hvacCentralized"
       );
@@ -171,6 +178,11 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
   // Handle form submission for multi-step navigation
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    const currentQuestion = questions[currentQuestionIndex];
+    if (currentQuestion.name === "demolishTile" && answers[currentQuestion.name] === "yes") {
+      setShowDisclaimer(true);
+      return;
+    }
 
     if (currentQuestionIndex < questions.length - 1) {
       // Move to the next question
@@ -182,53 +194,92 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
       onClose();
     }
   };
+  const handleDisclaimerClose = () => {
+    setShowDisclaimer(false);
+
+    // Ensure we do not go out of bounds
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
+    } else {
+      onSubmit(answers); // Submit answers if all questions are done
+      onClose(); // Close the modal
+    }
+  };
 
   // Get the current question
   const currentQuestion = questions[currentQuestionIndex];
-
+  const handlePreviousClick = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prevIndex) => prevIndex - 1);
+    }
+  };
   // Render the modal
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div
         className="modal-content question-modal"
-        onClick={(e) => e.stopPropagation()} // Prevent modal close on content click
+        onClick={(e) => e.stopPropagation()}
       >
         <button className="modal-close" onClick={onClose}>
           &times;
         </button>
-        <h2 className="text-lg font-bold mb-4">Answer These Questions</h2>
-        <form onSubmit={handleFormSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium text-gray-700">
-              {currentQuestionIndex + 1}. {currentQuestion.label}
-            </label>
-            <div className="mt-2 space-y-2">
-              {currentQuestion.options.map((option) => (
-                <label key={option.value} className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    name={currentQuestion.name}
-                    value={option.value}
-                    onChange={handleInputChange}
-                    checked={answers[currentQuestion.name] === option.value}
-                    required
-                  />
-                  <span>{option.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
 
-          {/* Submit Button */}
-          <div>
+        {!showDisclaimer ? (
+          <div className="text-center">
+            <h2 className="text-lg font-bold mb-4">Answer These Questions</h2>
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <div>
+                <label className="block font-medium text-gray-700">
+                  {currentQuestionIndex + 1}. {currentQuestion?.label}
+                </label>
+                <div className="mt-2 space-y-2 flex justify-around mb-14">
+                  {currentQuestion?.options.map((option) => (
+                    <label key={option.value} className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        name={currentQuestion.name}
+                        value={option.value}
+                        onChange={handleInputChange}
+                        checked={answers[currentQuestion.name] === option.value}
+                        required
+                      />
+                      <span>{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-around">
+                <button
+                  type="button"
+                  onClick={handlePreviousClick}
+                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                  disabled={currentQuestionIndex === 0}
+                >
+                  Previous
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  {currentQuestionIndex < questions.length - 1 ? "Next" : "Submit"}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          <div className="text-center">
+            <h2 className="text-lg font-bold mb-4">Disclaimer</h2>
+            <p className="mb-4">Demolishment charges might depend upon the location.</p>
             <button
-              type="submit"
+              onClick={handleDisclaimerClose}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              {currentQuestionIndex < questions.length - 1 ? "Next" : "Submit"}
+              Okay
             </button>
           </div>
-        </form>
+        )}
+
       </div>
     </div>
   );

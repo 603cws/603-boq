@@ -7,6 +7,10 @@ import AddonsSection from './Components/AddonsSection';
 import Recommendations from './Components/Recommendations.js';
 import processData from './Utils/dataProcessor';
 import { fetchCategories, fetchProductsData, fetchWorkspaces, fetchRoomData, } from './Utils/dataFetchers';
+import { Button } from '@headlessui/react';
+import CryptoJS from 'crypto-js';
+import { ArrowLeftFromLine } from 'lucide-react';
+import QuestionModal from './Components/questionModal.js';
 
 const ProductPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('Furniture');
@@ -27,7 +31,13 @@ const ProductPage = () => {
     const [selectedData, setSelectedData] = useState([])
     const [selectedAddOns, setSelectedAddOns] = useState([])
     const [userResponses, setUserResponses] = useState({});
-
+    const userID = '67a73a7c-8556-44b0-a42e-81ba988b25ff';
+    const secretKey = process.env.REACT_APP_SECRET_KEY; // Get the secret key from the environment variable
+    const encryptedUserId = CryptoJS.AES.encrypt(userID, secretKey).toString();
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://603-layout.vercel.app' : 'http://localhost:3001';
+    if (!secretKey) {
+        throw new Error("Secret key is undefined. Check your environment variable REACT_APP_SECRET_KEY.");
+    }
 
     useEffect(() => {
         const loadData = async () => {
@@ -65,10 +75,7 @@ const ProductPage = () => {
         }
     }, [roomData]);
 
-    // useEffect(() => {
-    //     console.log("Areas Data: ", areasData);
-    //     console.log("Quantity Data: ", quantityData);
-    // }, [areasData, quantityData]);
+
 
     // Filter products based on search query, price range, and category
     const filteredProducts = useMemo(() => {
@@ -245,9 +252,9 @@ const ProductPage = () => {
         setUserResponses((prevResponses) => ({
             ...prevResponses,
             flooring: answers.flooringStatus,
-            flooringArea: answers.flooringArea,
-            flooringType: answers.flooringType,
-            cabinFlooring: answers.cabinFlooring,
+            // flooringArea: answers.flooringArea,
+            demolishTile: answers.demolishTile,
+            // cabinFlooring: answers.cabinFlooring,
             hvacType: answers.hvacType,
             hvacCentralized: answers.hvacCentralized,
             partitionArea: answers.partitionArea,
@@ -266,12 +273,12 @@ const ProductPage = () => {
         // updateBOQTotal();
     };
     console.log("user responces", userResponses)
-    console.log("room data", roomData)
-    console.log("products", productsData)
-    console.log("grouped products", groupedProducts)
     return (
         <div>
             <ProgressBar progressPercentage={calculateProgress()} />
+            {/* <Button href={`${baseUrl}/?userId=${encodeURIComponent(encryptedUserId)}`} className='GoToLayout-btn' onClick={console.log("button clicked")}>
+                <ArrowLeftFromLine />Go to Layout
+            </Button> */}
             <div className="product-page flex justify-between mt-8">
                 <Sidebar className="self-center" categories={categories} selectedCategory={selectedCategory}
                     selectedSubCategory={selectedSubCategory} onSelectSubCategory={handleSelectSubCategory}
