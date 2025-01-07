@@ -28,8 +28,7 @@ const SideBar = ({ categories, selectedCategory, selectedSubCategory, onSelectSu
         }
         setSelectedCategory(category)
     };
-    console.log("categories", categories)
-    console.log("category in sidebar", selectedCategory);
+
     return (
         <div className="sidebar">
             {categories.map(({ id, category, subcategories }) => (
@@ -58,7 +57,6 @@ const SideBar = ({ categories, selectedCategory, selectedSubCategory, onSelectSu
                     <ul className="subcategory-list mt-2 pl-4 space-y-1">
                         {expandedCategory === category &&
                             subcategories.map((subcat) => (
-                                console.log("subcat", subcat),
                                 <li
                                     key={subcat}
                                     className={`cursor-pointer p-2 rounded-md ${selectedCategory === category &&

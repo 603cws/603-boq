@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory }) => {
+const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory, heightQuestionCheck = false }) => {
   // Map categories to their respective types
   const typeMapping = {
     Flooring: "flooring type",
@@ -16,8 +16,11 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
   const heightQuestion = [
     {
       name: 'officeHeight',
-      label: 'What is the height of your office?',
-      type: 'number',
+      label: 'Deafult height is set as 10 feet. Do you want it modify it?',
+      options: [
+        { value: "Yes", label: "Yes" },
+        { value: "No", label: "Noy" },
+      ],
     }
   ]
   const flooringQuestions = [
@@ -94,6 +97,8 @@ const QuestionModal = ({ onClose, onSubmit, cabinsQuestions, selectedCategory })
       setQuestions(hvacQuestions);
     } else if (selectedCategory === "Partitions / Ceilings") {
       setQuestions(partitionQuestions);
+    } else if (heightQuestionCheck) {
+      setQuestions(heightQuestion);
     }
   }, [cabinsQuestions, selectedCategory]); // Re-run when cabinsQuestions or category changes
 

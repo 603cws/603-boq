@@ -11,6 +11,7 @@ import { Button } from '@headlessui/react';
 import CryptoJS from 'crypto-js';
 import { ArrowLeftFromLine } from 'lucide-react';
 import QuestionModal from './Components/questionModal.js';
+import { useGrandTotal } from "./GrandTotalContext.js";
 
 const ProductPage = () => {
     const [selectedCategory, setSelectedCategory] = useState('Furniture');
@@ -28,8 +29,8 @@ const ProductPage = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [priceRange, setPriceRange] = useState([1000, 15000]);
-    const [selectedData, setSelectedData] = useState([])
-    const [selectedAddOns, setSelectedAddOns] = useState([])
+    const [selectedData, setSelectedData] = useState([]);
+    const [selectedAddOns, setSelectedAddOns] = useState([]);
     const [userResponses, setUserResponses] = useState({});
     const userID = '67a73a7c-8556-44b0-a42e-81ba988b25ff';
     const secretKey = process.env.REACT_APP_SECRET_KEY; // Get the secret key from the environment variable
@@ -38,6 +39,7 @@ const ProductPage = () => {
     if (!secretKey) {
         throw new Error("Secret key is undefined. Check your environment variable REACT_APP_SECRET_KEY.");
     }
+    const { grandTotal, setGrandTotal } = useGrandTotal();
 
     useEffect(() => {
         const loadData = async () => {
@@ -74,8 +76,6 @@ const ProductPage = () => {
             }
         }
     }, [roomData]);
-
-
 
     // Filter products based on search query, price range, and category
     const filteredProducts = useMemo(() => {
@@ -128,7 +128,7 @@ const ProductPage = () => {
     const handleSelectSubCategory = (category, subcategory) => {
         setSelectedCategory(category);
         setSelectedSubCategory(subcategory);
-        console.log("Selected Sub Category: ", category, subcategory);
+        // console.log("Selected Sub Category: ", category, subcategory);
     };
 
     const handleProductSelect = (product, variant) => {
@@ -243,9 +243,10 @@ const ProductPage = () => {
             localStorage.setItem("selectedData", JSON.stringify(updatedData)); // Persist updated state
             return updatedData;
         });
-        console.log("Processed group key:", groupKey);
+        // console.log("Processed group key:", groupKey);
     };
-    // console.log("selected data", selectedData)
+
+    console.log("selected data", selectedData);
 
     const handleQuestionSubmit = (answers) => {
         console.log("Answers from QuestionModal:", answers); // Log submitted answers
@@ -302,6 +303,8 @@ const ProductPage = () => {
                             handelSelectedData={handelSelectedData}
                             handleAddOnChange={handleAddOnChange}
                             userResponses={userResponses}
+                            selectedData={selectedData}
+                            setSelectedData={setSelectedData}
                         />}
                     </main>
                     {filteredProducts.map((product) =>
@@ -334,6 +337,7 @@ const ProductPage = () => {
                     <div className="invisible w-64"></div> // Invisible placeholder to maintain layout
                 )}
             </div>
+            <h1 className='fixed right-10 bottom-0'>Grand Total: {grandTotal}</h1>
         </div>
     );
 }

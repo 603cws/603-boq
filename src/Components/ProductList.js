@@ -13,6 +13,8 @@ const ProductList = ({
     handelSelectedData,
     handleAddOnChange,
     userResponses,
+    selectedData,
+    setSelectedData
 }) => {
     const baseImageUrl = 'https://bwxzfwsoxwtzhjbzbdzs.supabase.co/storage/v1/object/public/addon/';
     const productsInCategory = products[selectedCategory];
@@ -64,8 +66,7 @@ const ProductList = ({
         localStorage.setItem('selectedProducts', JSON.stringify(updatedSelection));
         onProductSelect(updatedSelection);
     };
-    console.log("selected category in product list", selectedCategory)
-    console.log("filtered products", filteredProducts)
+
     return (
         <section className="products-list" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
             <h1>Products in {selectedSubCategory} - {selectedSubCategory1}</h1>
@@ -92,6 +93,8 @@ const ProductList = ({
                                 areasData={areasData}
                                 handelSelectedData={handelSelectedData}
                                 handleAddOnChange={handleAddOnChange}
+                                selectedData={selectedData}
+                                setSelectedData={setSelectedData}
                             />
                         );
                     })

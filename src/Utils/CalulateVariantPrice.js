@@ -7,6 +7,6 @@ export const CalculateVariantPrice = (cat, subCat, price, quantityData, areasDat
 
 export const CalculateAddonPrice = (cat, subCat, addonPrice, quantityData, areasData) => {
     const total = calculateTotalPriceHelper(quantityData[0], areasData[0], cat, subCat);
-    // return total * addonPrice;
-    return total * 1234; // Hardcoded for now
+    return total * addonPrice;
+    // return total * 1234; // Hardcoded for now
 }

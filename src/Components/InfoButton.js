@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { calculateTotalPriceHelper } from '../Utils/CalculateTotalPriceHelper';
 import { normalizeKey } from '../Utils/CalculateTotalPriceHelper';
 
-const InfoButton = ({ selectedCategory, selectedSubCategory, quantityData, areasData, variant, price, showTotal = false }) => {
+const InfoButton = ({ selectedCategory, selectedSubCategory, quantityData, areasData, variant, price, showTotal = false, addonPrice }) => {
     const [showInfo, setShowInfo] = useState(false);
 
     const findClosestKey = (targetKey, dataObject) => {
@@ -22,9 +22,9 @@ const InfoButton = ({ selectedCategory, selectedSubCategory, quantityData, areas
         const quantity = quantityData[0]?.[normalizedSubCat] || 0;
         const area = areasData[0]?.[normalizedSubCat] || 0;
         if (selectedCategory === "Furniture" || selectedCategory === "HVAC" || selectedCategory === "Partitions / Ceilings") {
-            return { quantity, price: variant.price };
+            return { quantity, price: variant.price, addonPrice };
         } else {
-            return { area, price: variant.price };
+            return { area, price: variant.price, addonPrice };
         }
     };
 
@@ -56,8 +56,8 @@ const InfoButton = ({ selectedCategory, selectedSubCategory, quantityData, areas
                         {details.quantity > 0 && <p>Quantity: {details.quantity}</p>}
                         {details.area > 0 && <p>Area: {details.area}</p>}
                         <p>Product Price: ₹{details.price} / pp</p>
-                        <p>Addon Price: ₹{1234} / pp</p>       {/*Addon Price*/}
-                        <p>Total: ₹{(details.price + 1234) * (details.quantity > 0 && details.quantity || details.area > 0 && details.area)}</p>
+                        <p>Addon Price: ₹{addonPrice} / pp</p>       {/*Addon Price*/}
+                        <p>Total: ₹{(details.price + addonPrice) * (details.quantity > 0 && details.quantity || details.area > 0 && details.area)}</p>
                     </div>
                 )}
             </div>
