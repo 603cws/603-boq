@@ -28,7 +28,7 @@ const ProductPage = () => {
     const [areasData, setAreasData] = useState([]);
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [priceRange, setPriceRange] = useState([1000, 15000]);
+    const [priceRange, setPriceRange] = useState([1000, 15000000]);
     const [selectedData, setSelectedData] = useState([]);
     const [selectedAddOns, setSelectedAddOns] = useState([]);
     const [userResponses, setUserResponses] = useState({});
