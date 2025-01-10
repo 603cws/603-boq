@@ -25,11 +25,11 @@ const ProductCard = ({ product, variant, additionalImages, isSelected, handleSel
                 }}
             >
                 {/* Main Image */}
-                <div className="relative w-full h-64 overflow-auto">
+                <div className="relative w-64 h-64 overflow-auto">
                     <img
                         src={hoveredImage || variant.image} // Displays hoveredImage or original main image
                         alt={variant.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                     />
                 </div>
                 {/* Details Section */}
